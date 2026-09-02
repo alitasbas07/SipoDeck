@@ -1,0 +1,44 @@
+# .NET / WPF
+bin/
+obj/
+.vs/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# Rider / JetBrains
+.idea/
+
+# VS Code
+.vscode/
+
+# Build / publish
+publish/
+artifacts/
+
+# OS
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# ESP32 / PlatformIO
+.pio/
+.piolibdeps/
+.clangd/
+
+# ESPHome secrets
+secrets.yaml
+secrets.yml
+
+# Environment / local config
+.env
+.env.*
+!.env.example
+
+# Logs
+*.log
+
+# Temporary files
+*.tmp
+*.temp
