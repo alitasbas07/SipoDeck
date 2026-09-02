@@ -1,63 +1,32 @@
 # SipoDeck
 
-Open-source macro deck platform built with ESP32 and Windows.
+ESP32 tabanlı açık kaynaklı makro deck ve Windows masaüstü uygulaması.
 
-SipoDeck is a customizable macro deck system that connects a physical ESP32 device to a Windows desktop application.
+SipoDeck ile fiziksel tuşlara farklı görevler atanabilir, profiller oluşturulabilir ve birden fazla işlem tek tuşla çalıştırılabilir.
 
-## Project Status
+## Özellikler
 
-🚧 **Early Development**
+- 🎛️ ESP32 tabanlı makro deck
+- 🖥️ Windows masaüstü uygulaması
+- 📡 Wi-Fi ve USB bağlantısı
+- 👤 Özelleştirilebilir profiller
+- ⌨️ Tuş kombinasyonları
+- ⚡ Sıralı eylemler
+- 🔔 Özel bildirimler
+- 🔌 Eklenti sistemi
+- 🔧 Özelleştirilebilir tuş görevleri
 
-The project is currently under active development.
+## Teknolojiler
 
-## Planned Features
+- C#
+- .NET 10
+- WPF
+- ESP32
 
-* ESP32 macro deck support
-* Windows desktop application
-* Wi-Fi and USB communication
-* Customizable profiles
-* Button combinations
-* Sequential action chains
-* System and media controls
-* Program and URL launching
-* Custom notifications
-* Plugin system
-* Multiple device support
-* Future integrations and automation
+## Proje Durumu
 
-## Architecture
+🚧 Aktif geliştirme aşamasındadır.
 
-```text
-ESP32 Device
-     ↓
-Transport
-     ↓
-Device Events
-     ↓
-Input Engine
-     ↓
-Active Profile
-     ↓
-Action
-```
+## Lisans
 
-## Repository Structure
-
-```text
-SipoDeck/
-├── .github/
-├── assets/
-├── docs/
-├── esp32/
-├── plugins/
-├── src/
-├── tasks/
-├── CONTRIBUTING.md
-├── LICENSE
-├── README.md
-└── .gitignore
-```
-
-## License
-
-MIT License
+MIT Lisansı
