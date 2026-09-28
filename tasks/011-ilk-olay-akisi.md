@@ -66,11 +66,11 @@ Test Action
 
 ## Kabul Kriterleri
 
-- [ ] Test cihaz olayı oluşturulabiliyor.
-- [ ] `pressed` olayı Input Engine'e ulaşıyor.
-- [ ] `released` olayı Input Engine'e ulaşıyor.
-- [ ] Aktif profil değerlendiriliyor.
-- [ ] Tuş eşleştirmesi bulunabiliyor.
-- [ ] Eylem zincirine aktarım gerçekleşiyor.
-- [ ] Test eylemi çalışıyor.
-- [ ] Proje derleniyor.
+- [x] Test cihaz olayı oluşturulabiliyor.
+- [x] `pressed` olayı Input Engine'e ulaşıyor.
+- [x] `released` olayı Input Engine'e ulaşıyor.
+- [x] Aktif profil değerlendiriliyor.
+- [x] Tuş eşleştirmesi bulunabiliyor.
+- [x] Eylem zincirine aktarım gerçekleşiyor.
+- [x] Test eylemi çalışıyor.
+- [x] Proje derleniyor.
