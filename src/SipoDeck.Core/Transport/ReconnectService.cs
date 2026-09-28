@@ -6,7 +6,7 @@ namespace SipoDeck.Core.Transport;
 /// <summary>
 /// Bir transport bağlantısı koptuğunda, ana iş parçacığını engellemeden arka planda
 /// yeniden bağlanmayı deneyen basit bir yapıdır. Başarısız denemeler uygulamayı kilitlemez.
-/// Gerçek bağlantı Task 010 kapsamında devreye girer.
+/// Bağlantı koptuğunda (transport durumu Disconnected olduğunda) yeniden denenir.
 /// </summary>
 public sealed class ReconnectService : IDisposable
 {

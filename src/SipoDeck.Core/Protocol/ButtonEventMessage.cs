@@ -7,9 +7,11 @@ namespace SipoDeck.Core.Protocol;
 /// </summary>
 public sealed class ButtonEventMessage : DeviceMessage
 {
+    [JsonRequired]
     [JsonPropertyName("button")]
     public int Button { get; set; }
 
+    [JsonRequired]
     [JsonPropertyName("state")]
     public ButtonState State { get; set; }
 }

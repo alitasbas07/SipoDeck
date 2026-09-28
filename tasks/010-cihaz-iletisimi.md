@@ -91,12 +91,12 @@ Yeniden bağlanma mekanizması `008 — Uygulama Yaşam Döngüsü` kapsamında 
 
 ## Kabul Kriterleri
 
-- [ ] ESP32'den JSON tuş olayı alınabiliyor.
-- [ ] Wi-Fi üzerinden veri alınabiliyor.
-- [ ] USB Serial üzerinden veri alınabiliyor.
-- [ ] JSON mesajları cihaz olaylarına dönüştürülüyor.
-- [ ] Cihaz bilgileri alınabiliyor.
-- [ ] Geçersiz mesajlar güvenli şekilde reddediliyor.
-- [ ] Bağlantı kesilmesi algılanıyor.
-- [ ] Proje derleniyor.
-- [ ] Gerçek cihaz ile temel tuş basma/bırakma testi yapılıyor.
+- [ ] ESP32'den JSON tuş olayı alınabiliyor. (Ertelendi: donanım testi yapılmadı.)
+- [x] Wi-Fi üzerinden veri alınabiliyor. (Yerel WebSocket test sunucusuyla doğrulandı.)
+- [ ] USB Serial üzerinden veri alınabiliyor. (Kod hazır; seri port testi ertelendi.)
+- [x] JSON mesajları cihaz olaylarına dönüştürülüyor.
+- [x] Cihaz bilgileri alınabiliyor.
+- [x] Geçersiz mesajlar güvenli şekilde reddediliyor.
+- [x] Bağlantı kesilmesi algılanıyor.
+- [x] Proje derleniyor.
+- [ ] Gerçek cihaz ile temel tuş basma/bırakma testi yapılıyor. (Ertelendi: fiziksel test kullanıcı tarafından sonraya bırakıldı.)

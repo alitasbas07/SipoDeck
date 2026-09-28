@@ -13,6 +13,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "samples", "samples", "{5D20
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SipoDeck.EventFlowDemo", "samples\SipoDeck.EventFlowDemo\SipoDeck.EventFlowDemo.csproj", "{4EF2B89C-268A-41A0-894F-9D807C48BA7E}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SipoDeck.DeviceMonitor", "samples\SipoDeck.DeviceMonitor\SipoDeck.DeviceMonitor.csproj", "{9C8E5D98-71B1-41CD-9874-757F48D8A21E}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -59,6 +61,18 @@ Global
 		{4EF2B89C-268A-41A0-894F-9D807C48BA7E}.Release|x64.Build.0 = Release|Any CPU
 		{4EF2B89C-268A-41A0-894F-9D807C48BA7E}.Release|x86.ActiveCfg = Release|Any CPU
 		{4EF2B89C-268A-41A0-894F-9D807C48BA7E}.Release|x86.Build.0 = Release|Any CPU
+		{9C8E5D98-71B1-41CD-9874-757F48D8A21E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9C8E5D98-71B1-41CD-9874-757F48D8A21E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9C8E5D98-71B1-41CD-9874-757F48D8A21E}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{9C8E5D98-71B1-41CD-9874-757F48D8A21E}.Debug|x64.Build.0 = Debug|Any CPU
+		{9C8E5D98-71B1-41CD-9874-757F48D8A21E}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{9C8E5D98-71B1-41CD-9874-757F48D8A21E}.Debug|x86.Build.0 = Debug|Any CPU
+		{9C8E5D98-71B1-41CD-9874-757F48D8A21E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9C8E5D98-71B1-41CD-9874-757F48D8A21E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9C8E5D98-71B1-41CD-9874-757F48D8A21E}.Release|x64.ActiveCfg = Release|Any CPU
+		{9C8E5D98-71B1-41CD-9874-757F48D8A21E}.Release|x64.Build.0 = Release|Any CPU
+		{9C8E5D98-71B1-41CD-9874-757F48D8A21E}.Release|x86.ActiveCfg = Release|Any CPU
+		{9C8E5D98-71B1-41CD-9874-757F48D8A21E}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -67,5 +81,6 @@ Global
 		{8BF83411-E480-43C6-8368-71FB2DEE9A6D} = {827E0CD3-B72D-47B6-A68D-7590B98EB39B}
 		{81CD038C-7BDB-484E-8E8E-6F5A2333517B} = {827E0CD3-B72D-47B6-A68D-7590B98EB39B}
 		{4EF2B89C-268A-41A0-894F-9D807C48BA7E} = {5D20AA90-6969-D8BD-9DCD-8634F4692FDA}
+		{9C8E5D98-71B1-41CD-9874-757F48D8A21E} = {5D20AA90-6969-D8BD-9DCD-8634F4692FDA}
 	EndGlobalSection
 EndGlobal

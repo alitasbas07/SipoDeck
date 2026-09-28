@@ -31,6 +31,9 @@ Desktop.ini
 secrets.yaml
 secrets.yml
 
+# ESP32 firmware local config (Wi-Fi bilgileri)
+esp32/**/config.h
+
 # Environment / local config
 .env
 .env.*

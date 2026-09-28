@@ -9,6 +9,7 @@ namespace SipoDeck.Core.Protocol;
 /// </summary>
 [JsonPolymorphic(TypeDiscriminatorPropertyName = "type")]
 [JsonDerivedType(typeof(ButtonEventMessage), "button")]
+[JsonDerivedType(typeof(HelloMessage), "hello")]
 public abstract class DeviceMessage
 {
     [JsonPropertyName("version")]
