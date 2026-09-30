@@ -1,7 +1,6 @@
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Windows;
-using SipoDeck.Core.Settings;
 using SipoDeck.Runtime;
 
 namespace SipoDeck;
@@ -27,10 +26,8 @@ public partial class App
     {
         base.OnStartup(e);
 
-        // Windows başlangıç ayarı Runtime'ın sorumluluğu değildir (Task 014'te olay tabanlı
-        // hale getirilecektir); şimdilik burada tek seferlik okunur.
-        var startupSettings = new SettingsStore().Load();
-        WindowsStartup.Apply(startupSettings.Application.RunAtStartup);
+        // Windows başlangıç ayarı kayıt defteri işlemidir; Runtime yalnızca SettingsChanged olayını yayınlar.
+        ApplyWindowsStartup();
 
         SubscribeToRuntimeEvents();
 
@@ -62,6 +59,19 @@ public partial class App
         Runtime.MessageRejected += (_, reason) => Debug.WriteLine($"[SipoDeck] Mesaj reddedildi: {reason}");
         Runtime.ActionFailed += (_, args) => Debug.WriteLine($"[SipoDeck] Eylem başarısız ({args.ActionType}): {args.Exception.Message}");
         Runtime.Faulted += (_, args) => Debug.WriteLine($"[SipoDeck] Runtime kritik hata: {args.Exception.Message}");
+        Runtime.SettingsChanged += (_, _) => ApplyWindowsStartup();
+    }
+
+    private void ApplyWindowsStartup()
+    {
+        try
+        {
+            WindowsStartup.Apply(Runtime.GetSettingsSnapshot().Application.RunAtStartup);
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"[SipoDeck] Windows başlangıç ayarı uygulanamadı: {ex.Message}");
+        }
     }
 
     private void OnMainWindowClosing(object? sender, CancelEventArgs e)

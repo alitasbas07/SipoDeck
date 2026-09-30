@@ -19,9 +19,13 @@ public sealed class ProfileStore
     };
 
     private readonly string _filePath;
+    private readonly bool _usesDefaultPath;
 
     public ProfileStore(string? filePath = null)
-        => _filePath = filePath ?? AppDataPaths.ProfilesFile;
+    {
+        _usesDefaultPath = filePath is null;
+        _filePath = filePath ?? AppDataPaths.ProfilesFile;
+    }
 
     public ProfilesData Load()
     {
@@ -41,8 +45,10 @@ public sealed class ProfileStore
 
     public void Save(ProfilesData data)
     {
-        AppDataPaths.EnsureRootExists();
+        if (_usesDefaultPath)
+            AppDataPaths.EnsureRootExists();
+
         var json = JsonSerializer.Serialize(data, Options);
-        File.WriteAllText(_filePath, json);
+        AtomicFile.WriteAllText(_filePath, json);
     }
 }
