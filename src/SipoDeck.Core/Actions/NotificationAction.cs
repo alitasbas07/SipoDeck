@@ -1,3 +1,6 @@
+using System.Threading;
+using System.Threading.Tasks;
+
 namespace SipoDeck.Core.Actions;
 
 /// <summary>
@@ -16,8 +19,9 @@ public sealed class NotificationAction : IAction
 
     public string Message { get; }
 
-    public void Execute()
+    public Task ExecuteAsync(CancellationToken cancellationToken = default)
     {
         // Temel yapı: gerçek bildirim gösterimi henüz uygulanmadı.
+        return Task.CompletedTask;
     }
 }

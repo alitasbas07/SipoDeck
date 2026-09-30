@@ -1,11 +1,8 @@
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Windows;
-using SipoDeck.Core.Devices;
-using SipoDeck.Core.Input;
-using SipoDeck.Core.Profiles;
 using SipoDeck.Core.Settings;
-using SipoDeck.Core.Transport;
+using SipoDeck.Runtime;
 
 namespace SipoDeck;
 
@@ -13,40 +10,39 @@ namespace SipoDeck;
 /// Interaction logic for App.xaml
 /// Uygulama yaşam döngüsünü yönetir: ana pencere kapatıldığında sistem tepsisine
 /// küçültülür, tepsiden geri açılabilir ve yalnızca "Tamamen Kapat" ile sonlanır.
-/// Başlangıçta ayarlardaki bağlantıyla cihaz iletişimini başlatır ve cihaz olaylarını
-/// Input Engine'e aktarır.
+/// Ayar/profil yükleme, cihaz bağlantısı, Input Engine ve eylem kuyruğu <see cref="AppRuntime"/>
+/// tarafından yönetilir; bu sınıf yalnızca WPF/tray yaşam döngüsünü ve Runtime bağlantısını yönetir.
 /// </summary>
 public partial class App
 {
-    private static readonly TimeSpan ReconnectDelay = TimeSpan.FromSeconds(3);
-    private static readonly TimeSpan DisconnectTimeout = TimeSpan.FromSeconds(2);
-
     private TrayIcon? _trayIcon;
     private MainWindow? _mainWindow;
     private bool _isExiting;
 
-    private InputEngine? _inputEngine;
-    private ITransport? _transport;
-    private DeviceConnection? _deviceConnection;
-    private ReconnectService? _reconnectService;
-
     public ApplicationState State { get; private set; } = ApplicationState.Starting;
 
-    public AppSettings Settings { get; private set; } = new();
+    public AppRuntime Runtime { get; } = new();
 
-    public ProfileManager Profiles { get; } = new();
-
-    public DeviceManager Devices { get; } = new();
-
-    protected override void OnStartup(StartupEventArgs e)
+    protected override async void OnStartup(StartupEventArgs e)
     {
         base.OnStartup(e);
 
-        Settings = new SettingsStore().Load();
-        WindowsStartup.Apply(Settings.Application.RunAtStartup);
+        // Windows başlangıç ayarı Runtime'ın sorumluluğu değildir (Task 014'te olay tabanlı
+        // hale getirilecektir); şimdilik burada tek seferlik okunur.
+        var startupSettings = new SettingsStore().Load();
+        WindowsStartup.Apply(startupSettings.Application.RunAtStartup);
 
-        LoadProfiles();
-        StartDeviceCommunication();
+        SubscribeToRuntimeEvents();
+
+        try
+        {
+            await Runtime.StartAsync();
+        }
+        catch (Exception ex)
+        {
+            // Runtime Faulted durumuna geçer ve olayla bildirir; uygulama yine de açılır.
+            Debug.WriteLine($"[SipoDeck] Runtime başlatılamadı: {ex.Message}");
+        }
 
         _mainWindow = new MainWindow();
         _mainWindow.Closing += OnMainWindowClosing;
@@ -57,92 +53,15 @@ public partial class App
         State = ApplicationState.Running;
     }
 
-    private void LoadProfiles()
+    private void SubscribeToRuntimeEvents()
     {
-        var data = new ProfileStore().Load();
-        foreach (var profileData in data.Profiles)
-            Profiles.Add(profileData.ToProfile());
-
-        if (data.ActiveProfileId is not null)
-            Profiles.SwitchTo(data.ActiveProfileId);
-    }
-
-    private void StartDeviceCommunication()
-    {
-        _transport = CreateTransport(Settings.Connection);
-        if (_transport is null)
-        {
-            Debug.WriteLine("[SipoDeck] Bağlantı ayarları eksik; cihaz iletişimi başlatılmadı.");
-            return;
-        }
-
-        _inputEngine = new InputEngine(
-            Profiles,
-            TimeSpan.FromMilliseconds(Settings.Input.LongPressThresholdMilliseconds),
-            Settings.Input.FnKey,
-            Settings.Input.ProfileSwitchMap);
-
-        _deviceConnection = new DeviceConnection(_transport, Settings.Connection.ConnectionType, Devices);
-        _deviceConnection.EventReceived += (_, deviceEvent) => _inputEngine.Process(deviceEvent);
-        _deviceConnection.DeviceIdentified += (_, device) =>
+        Runtime.StateChanged += (_, state) => Debug.WriteLine($"[SipoDeck] Runtime: {state}");
+        Runtime.DeviceConnectionStateChanged += (_, args) => Debug.WriteLine($"[SipoDeck] {args.ConnectionType}: {args.State}");
+        Runtime.DeviceIdentified += (_, device) =>
             Debug.WriteLine($"[SipoDeck] Cihaz tanındı: {device.Name} ({device.Id}), firmware {device.FirmwareVersion}");
-        _deviceConnection.MessageRejected += (_, reason) =>
-            Debug.WriteLine($"[SipoDeck] Mesaj reddedildi: {reason}");
-        _deviceConnection.StateChanged += (_, state) =>
-            Debug.WriteLine($"[SipoDeck] {_transport.Name}: {state}");
-
-        if (Settings.Application.AutoReconnect)
-        {
-            _reconnectService = new ReconnectService(_transport, ReconnectDelay);
-            _reconnectService.Start();
-        }
-        else
-        {
-            _ = ConnectOnceAsync(_transport);
-        }
-    }
-
-    private static async Task ConnectOnceAsync(ITransport transport)
-    {
-        try
-        {
-            await transport.ConnectAsync();
-        }
-        catch (Exception ex)
-        {
-            Debug.WriteLine($"[SipoDeck] Bağlantı kurulamadı: {ex.Message}");
-        }
-    }
-
-    /// <summary>
-    /// Ayarlardaki bağlantı türüne göre transport oluşturur. Adres/port veya seri port
-    /// girilmemişse null döner; değerler koda sabitlenmez.
-    /// </summary>
-    private static ITransport? CreateTransport(ConnectionSettings connection) => connection.ConnectionType switch
-    {
-        ConnectionType.WiFi when !string.IsNullOrWhiteSpace(connection.Host) && connection.Port > 0
-            => new WiFiTransport(new WiFiTransportSettings { Host = connection.Host, Port = connection.Port }),
-        ConnectionType.Serial when !string.IsNullOrWhiteSpace(connection.SerialPortName)
-            => new SerialTransport(new SerialTransportSettings
-            {
-                PortName = connection.SerialPortName,
-                BaudRate = connection.BaudRate
-            }),
-        _ => null
-    };
-
-    private void StopDeviceCommunication()
-    {
-        _reconnectService?.Dispose();
-        _deviceConnection?.Dispose();
-
-        if (_transport is not null)
-        {
-            var transport = _transport;
-            Task.Run(transport.DisconnectAsync).Wait(DisconnectTimeout);
-        }
-
-        _inputEngine?.Dispose();
+        Runtime.MessageRejected += (_, reason) => Debug.WriteLine($"[SipoDeck] Mesaj reddedildi: {reason}");
+        Runtime.ActionFailed += (_, args) => Debug.WriteLine($"[SipoDeck] Eylem başarısız ({args.ActionType}): {args.Exception.Message}");
+        Runtime.Faulted += (_, args) => Debug.WriteLine($"[SipoDeck] Runtime kritik hata: {args.Exception.Message}");
     }
 
     private void OnMainWindowClosing(object? sender, CancelEventArgs e)
@@ -168,13 +87,20 @@ public partial class App
         State = ApplicationState.Running;
     }
 
-    private void ExitApplication()
+    private async void ExitApplication()
     {
         _isExiting = true;
         State = ApplicationState.Closing;
 
-        // Kaynaklar serbest bırakılır; aktif cihaz bağlantısı kapatılır.
-        StopDeviceCommunication();
+        try
+        {
+            await Runtime.StopAsync();
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"[SipoDeck] Runtime durdurulurken hata: {ex.Message}");
+        }
+
         _trayIcon?.Dispose();
         _mainWindow?.Close();
 

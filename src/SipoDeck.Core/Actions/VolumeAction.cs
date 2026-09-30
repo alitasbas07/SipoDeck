@@ -1,3 +1,6 @@
+using System.Threading;
+using System.Threading.Tasks;
+
 namespace SipoDeck.Core.Actions;
 
 /// <summary>
@@ -20,8 +23,9 @@ public sealed class VolumeAction : IAction
 
     public VolumeCommand Command { get; }
 
-    public void Execute()
+    public Task ExecuteAsync(CancellationToken cancellationToken = default)
     {
         // Temel yapı: gerçek ses kontrolü henüz uygulanmadı.
+        return Task.CompletedTask;
     }
 }

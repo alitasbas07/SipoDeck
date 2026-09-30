@@ -1,3 +1,6 @@
+using System.Threading;
+using System.Threading.Tasks;
+
 namespace SipoDeck.Core.Actions;
 
 /// <summary>
@@ -21,8 +24,9 @@ public sealed class MediaAction : IAction
 
     public MediaCommand Command { get; }
 
-    public void Execute()
+    public Task ExecuteAsync(CancellationToken cancellationToken = default)
     {
         // Temel yapı: gerçek medya kontrolü henüz uygulanmadı.
+        return Task.CompletedTask;
     }
 }

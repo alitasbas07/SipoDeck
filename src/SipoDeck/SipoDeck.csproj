@@ -11,6 +11,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\SipoDeck.Core\SipoDeck.Core.csproj" />
+    <ProjectReference Include="..\SipoDeck.Runtime\SipoDeck.Runtime.csproj" />
   </ItemGroup>
 
 </Project>

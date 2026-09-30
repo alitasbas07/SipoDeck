@@ -14,6 +14,7 @@ namespace SipoDeck.Core.Input;
 public sealed class InputEngine : IInputEngine, IDisposable
 {
     private readonly ProfileManager _profiles;
+    private readonly IActionDispatcher _dispatcher;
     private readonly TimeSpan _longPressThreshold;
     private readonly int? _fnKey;
     private readonly IReadOnlyDictionary<int, string> _fnProfileSwitchMap;
@@ -25,18 +26,22 @@ public sealed class InputEngine : IInputEngine, IDisposable
     private readonly HashSet<int> _longPressFired = new();
     private readonly Dictionary<int, ITimer> _longPressTimers = new();
 
+    /// <param name="profiles">Aktif profili sağlayan profil yöneticisi.</param>
+    /// <param name="dispatcher">Üretilen eylemlerin teslim edileceği bileşen (Input Engine eylemi kendisi çalıştırmaz).</param>
     /// <param name="longPressThreshold">Uzun basma eşiği. Varsayılan koda gömülmez; çağıran tarafından verilir.</param>
     /// <param name="fnKey">FN olarak kullanılacak tuş numarası (isteğe bağlı, yapılandırılabilir).</param>
     /// <param name="fnProfileSwitchMap">FN + tuş → profil kimliği eşleştirmesi.</param>
     /// <param name="timeProvider">Zaman kaynağı; verilmezse sistem sağlayıcısı kullanılır.</param>
     public InputEngine(
         ProfileManager profiles,
+        IActionDispatcher dispatcher,
         TimeSpan longPressThreshold,
         int? fnKey = null,
         IReadOnlyDictionary<int, string>? fnProfileSwitchMap = null,
         TimeProvider? timeProvider = null)
     {
         _profiles = profiles;
+        _dispatcher = dispatcher;
         _longPressThreshold = longPressThreshold;
         _fnKey = fnKey;
         _fnProfileSwitchMap = fnProfileSwitchMap ?? new Dictionary<int, string>();
@@ -103,7 +108,8 @@ public sealed class InputEngine : IInputEngine, IDisposable
             }
         }
 
-        toExecute?.Execute();
+        if (toExecute is not null)
+            _dispatcher.Dispatch(toExecute);
     }
 
     private void OnLongPressElapsed(int key)
@@ -125,7 +131,8 @@ public sealed class InputEngine : IInputEngine, IDisposable
             }
         }
 
-        longPressAction?.Execute();
+        if (longPressAction is not null)
+            _dispatcher.Dispatch(longPressAction);
     }
 
     private void HandleRelease(int key)
@@ -155,7 +162,8 @@ public sealed class InputEngine : IInputEngine, IDisposable
                 toExecute = binding.Action;
         }
 
-        toExecute?.Execute();
+        if (toExecute is not null)
+            _dispatcher.Dispatch(toExecute);
     }
 
     private void DisposeTimer(int key)

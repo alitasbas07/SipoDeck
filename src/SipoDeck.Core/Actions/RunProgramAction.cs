@@ -1,4 +1,6 @@
 using System.Diagnostics;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace SipoDeck.Core.Actions;
 
@@ -20,7 +22,7 @@ public sealed class RunProgramAction : IAction
 
     public string? WorkingDirectory { get; }
 
-    public void Execute()
+    public Task ExecuteAsync(CancellationToken cancellationToken = default)
     {
         var startInfo = new ProcessStartInfo
         {
@@ -35,5 +37,6 @@ public sealed class RunProgramAction : IAction
             startInfo.WorkingDirectory = WorkingDirectory;
 
         Process.Start(startInfo);
+        return Task.CompletedTask;
     }
 }
