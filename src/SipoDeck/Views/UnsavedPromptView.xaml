@@ -1,0 +1,31 @@
+<UserControl x:Class="SipoDeck.Views.UnsavedPromptView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             Focusable="False">
+    <!-- Kaydedilmemiş değişiklik uyarısı. DataContext: UnsavedMessage, UnsavedSaveCommand,
+         UnsavedDiscardCommand ve UnsavedCancelCommand sunan ViewModel (kabuk veya sayfa). Görünürlüğü sahibi yönetir. -->
+    <Grid Background="#B3050505">
+        <Grid.InputBindings>
+            <KeyBinding Key="Escape" Command="{Binding UnsavedCancelCommand}" />
+        </Grid.InputBindings>
+        <Border Style="{StaticResource SurfaceCardStyle}" Background="{StaticResource SurfaceElevatedBrush}"
+                BorderBrush="{StaticResource BorderBrush}" MaxWidth="440"
+                HorizontalAlignment="Center" VerticalAlignment="Center"
+                AutomationProperties.Name="Kaydedilmemiş değişiklikler">
+            <StackPanel>
+                <TextBlock Style="{StaticResource TextTitle3}" Text="Kaydedilmemiş değişiklikler var" />
+                <TextBlock Style="{StaticResource TextBodySecondary}" Margin="0,8,0,0"
+                           TextWrapping="Wrap" TextTrimming="None"
+                           Text="{Binding UnsavedMessage}" />
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,24,0,0">
+                    <Button Style="{StaticResource GhostButtonStyle}" Content="İptal" Margin="0,0,8,0"
+                            Command="{Binding UnsavedCancelCommand}" />
+                    <Button Style="{StaticResource SecondaryButtonStyle}" Content="Vazgeç" Margin="0,0,12,0"
+                            Command="{Binding UnsavedDiscardCommand}" />
+                    <Button Style="{StaticResource PrimaryButtonStyle}" Content="Kaydet"
+                            Command="{Binding UnsavedSaveCommand}" />
+                </StackPanel>
+            </StackPanel>
+        </Border>
+    </Grid>
+</UserControl>

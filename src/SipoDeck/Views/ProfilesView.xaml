@@ -1,0 +1,258 @@
+<UserControl x:Class="SipoDeck.Views.ProfilesView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:views="clr-namespace:SipoDeck.Views"
+             Focusable="False">
+
+    <UserControl.Resources>
+        <Style x:Key="FieldErrorStyle" TargetType="TextBlock" BasedOn="{StaticResource TextCaption}">
+            <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}" />
+            <Setter Property="Margin" Value="0,8,0,0" />
+            <Setter Property="TextWrapping" Value="Wrap" />
+            <Setter Property="TextTrimming" Value="None" />
+            <Style.Triggers>
+                <Trigger Property="Text" Value="">
+                    <Setter Property="Visibility" Value="Collapsed" />
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
+        <Style x:Key="FieldLabelStyle" TargetType="TextBlock" BasedOn="{StaticResource TextCaption}">
+            <Setter Property="Margin" Value="0,0,0,8" />
+        </Style>
+
+        <Style x:Key="HintStyle" TargetType="TextBlock" BasedOn="{StaticResource TextCaptionMuted}">
+            <Setter Property="TextWrapping" Value="Wrap" />
+            <Setter Property="TextTrimming" Value="None" />
+        </Style>
+
+        <Style x:Key="OptionCheckBoxStyle" TargetType="CheckBox" BasedOn="{StaticResource QuietCheckBoxStyle}">
+            <Setter Property="FontSize" Value="{StaticResource FontSizeBody}" />
+            <Setter Property="HorizontalAlignment" Value="Left" />
+        </Style>
+
+        <!-- Yalnızca profil aktif DEĞİLKEN görünür -->
+        <Style x:Key="ProfileRowItemStyle" TargetType="ListBoxItem" BasedOn="{StaticResource RowListBoxItemStyle}">
+            <Setter Property="AutomationProperties.Name" Value="{Binding Name}" />
+        </Style>
+
+        <Style x:Key="ShowWhenNotActiveStyle" TargetType="FrameworkElement">
+            <Setter Property="Visibility" Value="Visible" />
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding IsSelectedActive}" Value="True">
+                    <Setter Property="Visibility" Value="Collapsed" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+
+        <Style x:Key="ShowWhenActiveStyle" TargetType="FrameworkElement">
+            <Setter Property="Visibility" Value="Collapsed" />
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding IsSelectedActive}" Value="True">
+                    <Setter Property="Visibility" Value="Visible" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+
+        <!-- Pasif profil satırı soluk görünür -->
+        <Style x:Key="RowTextPanelStyle" TargetType="StackPanel">
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding IsEnabled}" Value="False">
+                    <Setter Property="Opacity" Value="0.55" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+
+        <Style x:Key="ActiveBadgeStyle" TargetType="StackPanel">
+            <Setter Property="Orientation" Value="Horizontal" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+            <Setter Property="Visibility" Value="Collapsed" />
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding IsActive}" Value="True">
+                    <Setter Property="Visibility" Value="Visible" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+    </UserControl.Resources>
+
+    <Grid>
+        <Grid Margin="{StaticResource PagePadding}">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
+
+            <!-- Başlık ve sabit eylemler -->
+            <Grid Grid.Row="0" Margin="0,0,0,24">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+
+                <StackPanel>
+                    <TextBlock Style="{StaticResource TextTitle1}" Text="Profiller" />
+                    <TextBlock Style="{StaticResource TextBodySecondary}" Margin="0,8,0,0"
+                               Text="Profilleri oluştur, düzenle ve aktif profili seç." />
+                </StackPanel>
+
+                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Top">
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,20,0"
+                                Visibility="{Binding SavedMessage, Converter={StaticResource NullToVisibilityConverter}}">
+                        <ContentControl Style="{StaticResource Icon16}" Content="{StaticResource IconCheck}" VerticalAlignment="Center" />
+                        <TextBlock Style="{StaticResource TextBodySmall}" Margin="8,0,0,0" VerticalAlignment="Center"
+                                   Text="{Binding SavedMessage}" />
+                    </StackPanel>
+                    <Button Style="{StaticResource SecondaryButtonStyle}" Content="İptal"
+                            Command="{Binding CancelCommand}" Margin="0,0,12,0" />
+                    <Button Style="{StaticResource PrimaryButtonStyle}" Content="Kaydet"
+                            Command="{Binding SaveCommand}" />
+                </StackPanel>
+            </Grid>
+
+            <Grid Grid.Row="1">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="300" />
+                    <ColumnDefinition Width="1" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+
+                <!-- SOL: liste -->
+                <Grid Grid.Column="0" Margin="0,0,24,0">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+
+                    <Button Grid.Row="0" Style="{StaticResource SecondaryButtonStyle}" Content="Yeni profil"
+                            HorizontalAlignment="Left" Margin="0,0,0,16"
+                            Command="{Binding CreateCommand}" />
+
+                    <ListBox x:Name="ProfileList" Grid.Row="1" Style="{StaticResource RowListBoxStyle}"
+                             SelectionChanged="OnProfileSelectionChanged"
+                             ItemContainerStyle="{StaticResource ProfileRowItemStyle}"
+                             ItemsSource="{Binding Profiles}"
+                             SelectedItem="{Binding SelectedProfile, Mode=TwoWay}"
+                             AutomationProperties.Name="Profil listesi">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel Style="{StaticResource RowTextPanelStyle}">
+                                        <TextBlock Style="{StaticResource TextBodyStrong}" Text="{Binding Name}" />
+                                        <TextBlock Style="{StaticResource TextCaptionMuted}" Margin="0,2,0,0"
+                                                   Text="{Binding SummaryText}" />
+                                    </StackPanel>
+                                    <StackPanel Grid.Column="1" Style="{StaticResource ActiveBadgeStyle}" Margin="12,0,0,0">
+                                        <Ellipse Width="8" Height="8" Fill="{StaticResource TextPrimaryBrush}" VerticalAlignment="Center" />
+                                        <TextBlock Style="{StaticResource TextCaption}" Margin="6,0,0,0"
+                                                   Foreground="{StaticResource TextPrimaryBrush}" Text="Aktif" />
+                                    </StackPanel>
+                                </Grid>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+                </Grid>
+
+                <Rectangle Grid.Column="1" Style="{StaticResource DividerVerticalStyle}" />
+
+                <!-- SAĞ: detay -->
+                <ScrollViewer Grid.Column="2" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled"
+                              Focusable="False" Margin="40,0,0,0"
+                              Visibility="{Binding HasSelection, Converter={StaticResource BooleanToVisibilityConverter}}">
+                    <StackPanel MaxWidth="560" HorizontalAlignment="Left" Margin="0,0,24,24">
+
+                        <!-- Genel hata / bilgi -->
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,24"
+                                    Visibility="{Binding GeneralError, Converter={StaticResource NullToVisibilityConverter}}">
+                            <ContentControl Style="{StaticResource Icon16}" Content="{StaticResource IconAlertCircle}" VerticalAlignment="Top" Margin="0,2,0,0" />
+                            <TextBlock Style="{StaticResource TextBodySmall}" Margin="8,0,0,0" MaxWidth="520"
+                                       TextWrapping="Wrap" TextTrimming="None" Text="{Binding GeneralError}" />
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,24"
+                                    Visibility="{Binding InfoMessage, Converter={StaticResource NullToVisibilityConverter}}">
+                            <ContentControl Style="{StaticResource Icon16}" Content="{StaticResource IconCheckCircle}" VerticalAlignment="Top" Margin="0,2,0,0" />
+                            <TextBlock Style="{StaticResource TextBodySmall}" Margin="8,0,0,0" MaxWidth="520"
+                                       TextWrapping="Wrap" TextTrimming="None" Text="{Binding InfoMessage}" />
+                        </StackPanel>
+
+                        <!-- Ad -->
+                        <TextBlock Style="{StaticResource FieldLabelStyle}" Text="Profil adı" />
+                        <TextBox Style="{StaticResource InputTextBoxStyle}" HorizontalAlignment="Left" Width="320"
+                                 Text="{Binding DraftName, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                 Tag="{Binding NameError}" AutomationProperties.Name="Profil adı" />
+                        <TextBlock Style="{StaticResource FieldErrorStyle}" Text="{Binding NameError}" />
+
+                        <!-- Etkinlik -->
+                        <CheckBox Style="{StaticResource OptionCheckBoxStyle}" Content="Etkin" Margin="0,24,0,0"
+                                  IsChecked="{Binding DraftIsEnabled, Mode=TwoWay}" />
+                        <TextBlock Style="{StaticResource HintStyle}" Margin="22,4,0,0"
+                                   Text="Pasif profil aktif yapılamaz ve FN ile seçilemez." />
+
+                        <Rectangle Style="{StaticResource DividerHorizontalStyle}" Margin="0,24" />
+
+                        <!-- Aktif profil -->
+                        <TextBlock Style="{StaticResource TextBodyStrong}" Text="Aktif profil" Margin="0,0,0,12" />
+                        <StackPanel Orientation="Horizontal" Style="{StaticResource ShowWhenActiveStyle}">
+                            <Ellipse Width="8" Height="8" Fill="{StaticResource TextPrimaryBrush}" VerticalAlignment="Center" />
+                            <TextBlock Style="{StaticResource TextBody}" Margin="8,0,0,0" Text="Bu profil şu an aktif." />
+                        </StackPanel>
+                        <StackPanel Style="{StaticResource ShowWhenNotActiveStyle}">
+                            <Button Style="{StaticResource SecondaryButtonStyle}" Content="Aktif yap"
+                                    HorizontalAlignment="Left" Command="{Binding SetActiveCommand}" />
+                            <TextBlock Style="{StaticResource HintStyle}" Margin="0,8,0,0" Text="{Binding SetActiveHint}"
+                                       Visibility="{Binding SetActiveHint, Converter={StaticResource NullToVisibilityConverter}}" />
+                        </StackPanel>
+
+                        <Rectangle Style="{StaticResource DividerHorizontalStyle}" Margin="0,24" />
+
+                        <!-- Kopyala / sil -->
+                        <StackPanel Orientation="Horizontal">
+                            <Button Style="{StaticResource SecondaryButtonStyle}" Content="Kopyala"
+                                    Command="{Binding DuplicateCommand}" Margin="0,0,12,0" />
+                            <Button Style="{StaticResource SecondaryButtonStyle}" Content="Sil"
+                                    Command="{Binding DeleteCommand}" />
+                        </StackPanel>
+                        <TextBlock Style="{StaticResource HintStyle}" Margin="0,8,0,0" Text="{Binding DeleteHint}"
+                                   Visibility="{Binding DeleteHint, Converter={StaticResource NullToVisibilityConverter}}" />
+
+                        <!-- Silme onayı (satır içi) -->
+                        <Border Style="{StaticResource SurfaceCardStyle}" Margin="0,20,0,0"
+                                Visibility="{Binding IsDeleteConfirmVisible, Converter={StaticResource BooleanToVisibilityConverter}}"
+                                AutomationProperties.Name="Silme onayı">
+                            <StackPanel>
+                                <TextBlock Style="{StaticResource TextBody}" TextWrapping="Wrap" TextTrimming="None"
+                                           Text="{Binding DeleteConfirmText}" />
+                                <TextBlock Style="{StaticResource TextBodySmall}" Margin="0,12,0,0"
+                                           TextWrapping="Wrap" TextTrimming="None" Text="{Binding DeleteBlockedNote}"
+                                           Visibility="{Binding DeleteBlockedNote, Converter={StaticResource NullToVisibilityConverter}}" />
+                                <StackPanel Orientation="Horizontal" Margin="0,20,0,0">
+                                    <Button Style="{StaticResource GhostButtonStyle}" Content="Vazgeç" Margin="0,0,8,0"
+                                            Command="{Binding CancelDeleteCommand}" />
+                                    <Button Style="{StaticResource PrimaryButtonStyle}" Content="Sil"
+                                            Command="{Binding ConfirmDeleteCommand}" />
+                                </StackPanel>
+                            </StackPanel>
+                        </Border>
+
+                        <Rectangle Style="{StaticResource DividerHorizontalStyle}" Margin="0,24" />
+
+                        <!-- Tuş atamaları (Task 018) -->
+                        <TextBlock Style="{StaticResource TextBodyStrong}" Text="Tuş atamaları" Margin="0,0,0,4" />
+                        <TextBlock Style="{StaticResource TextBodySecondary}" Text="{Binding AssignmentSummary}" />
+                        <Button Style="{StaticResource SecondaryButtonStyle}" Content="Tuş atamalarını düzenle"
+                                HorizontalAlignment="Left" Margin="0,12,0,0" IsEnabled="False"
+                                ToolTip="Yakında" ToolTipService.ShowOnDisabled="True" />
+                        <TextBlock Style="{StaticResource HintStyle}" Margin="0,8,0,0" Text="Yakında." />
+                    </StackPanel>
+                </ScrollViewer>
+            </Grid>
+        </Grid>
+
+        <!-- Sayfa içi kaydedilmemiş değişiklik uyarısı -->
+        <views:UnsavedPromptView
+            Visibility="{Binding IsUnsavedPromptVisible, Converter={StaticResource BooleanToVisibilityConverter}}" />
+    </Grid>
+</UserControl>
