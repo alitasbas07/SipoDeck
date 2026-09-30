@@ -5,6 +5,13 @@
       "args": [
         "mcp"
       ]
+    },
+    "task-view": {
+      "url": "https://workspace.payos.tech/api/v1/mcp",
+      "headers": {
+        "Authorization": "Bearer ${TASKVIEW_API_KEY}",
+        "Accept": "application/json, text/event-stream"
+      }
     }
   }
 }
