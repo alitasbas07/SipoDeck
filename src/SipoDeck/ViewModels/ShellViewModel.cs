@@ -21,10 +21,13 @@ public sealed class ShellViewModel : ObservableObject, IDisposable
     private NavigationItemViewModel _selectedNavigationItem;
     private bool _isSplashVisible = true;
     private bool _dontShowSplashAgain;
+    private NavigationItemViewModel? _pendingNavigation;
+    private NavigationItemViewModel _pageItem;
 
     public ShellViewModel(AppRuntime runtime, Dispatcher dispatcher)
     {
         Status = new StatusViewModel(runtime, dispatcher);
+        Settings = new SettingsViewModel(runtime, dispatcher, Status);
 
         var items = new List<NavigationItemViewModel>
         {
@@ -34,17 +37,47 @@ public sealed class ShellViewModel : ObservableObject, IDisposable
             Add(ActionsPageKey, "Eylemler", "IconActions", new PlaceholderPageViewModel("Eylemler", "Eylem kitaplığı yakında burada.")),
             Add(DevicesPageKey, "Cihazlar", "IconDevices", new PlaceholderPageViewModel("Cihazlar", "Cihaz eşleştirme ve yönetimi yakında burada.")),
             Add(NotificationsPageKey, "Bildirimler", "IconNotifications", new PlaceholderPageViewModel("Bildirimler", "İşlem bildirimlerinin geçmişi yakında burada.")),
-            Add(SettingsPageKey, "Ayarlar", "IconSettings", new PlaceholderPageViewModel("Ayarlar", "Uygulama ayarları yakında burada."))
+            Add(SettingsPageKey, "Ayarlar", "IconSettings", Settings)
         };
 
         NavigationItems = items;
         _selectedNavigationItem = items[0];
+        _pageItem = items[0];
 
         StartCommand = new RelayCommand(() => Proceed(HomePageKey));
         ConnectDeviceCommand = new RelayCommand(() => Proceed(DevicesPageKey));
+
+        UnsavedSaveCommand = new AsyncRelayCommand(ResolveUnsavedSaveAsync);
+        UnsavedDiscardCommand = new RelayCommand(() =>
+        {
+            Settings.Discard();
+            CompletePendingNavigation();
+        });
+        UnsavedCancelCommand = new RelayCommand(CancelPendingNavigation);
     }
 
     public StatusViewModel Status { get; }
+
+    public SettingsViewModel Settings { get; }
+
+    /// <summary>Kaydedilmemiş ayar varken başka sayfaya geçilmek istendiğinde beklenen hedef; null ise uyarı yok.</summary>
+    public NavigationItemViewModel? PendingNavigation
+    {
+        get => _pendingNavigation;
+        private set
+        {
+            if (SetProperty(ref _pendingNavigation, value))
+                OnPropertyChanged(nameof(IsUnsavedPromptVisible));
+        }
+    }
+
+    public bool IsUnsavedPromptVisible => _pendingNavigation is not null;
+
+    public IAsyncRelayCommand UnsavedSaveCommand { get; }
+
+    public IRelayCommand UnsavedDiscardCommand { get; }
+
+    public IRelayCommand UnsavedCancelCommand { get; }
 
     public IReadOnlyList<NavigationItemViewModel> NavigationItems { get; }
 
@@ -57,11 +90,21 @@ public sealed class ShellViewModel : ObservableObject, IDisposable
             if (value is null)
                 return;
 
-            if (SetProperty(ref _selectedNavigationItem, value))
+            if (!SetProperty(ref _selectedNavigationItem, value))
+                return;
+
+            OnPropertyChanged(nameof(SelectedNavIndex));
+
+            // Ayarlar sayfasında kaydedilmemiş değişiklik varken sayfa değişimi onaya bağlanır:
+            // menü seçimi hedefi gösterir, sayfa onaya kadar değişmez.
+            if (!ReferenceEquals(value, _pageItem) && ReferenceEquals(_pageItem.Page, Settings) && Settings.HasChanges)
             {
-                OnPropertyChanged(nameof(SelectedNavIndex));
-                OnPropertyChanged(nameof(CurrentPage));
+                PendingNavigation = value;
+                return;
             }
+
+            _pageItem = value;
+            OnPropertyChanged(nameof(CurrentPage));
         }
     }
 
@@ -85,7 +128,7 @@ public sealed class ShellViewModel : ObservableObject, IDisposable
         }
     }
 
-    public object CurrentPage => _selectedNavigationItem.Page;
+    public object CurrentPage => _pageItem.Page;
 
     public bool IsSplashVisible
     {
@@ -111,7 +154,38 @@ public sealed class ShellViewModel : ObservableObject, IDisposable
             SelectedNavigationItem = item;
     }
 
-    public void Dispose() => Status.Dispose();
+    public void Dispose()
+    {
+        Settings.Dispose();
+        Status.Dispose();
+    }
+
+    private async Task ResolveUnsavedSaveAsync()
+    {
+        // Hata varsa sayfa değişmez; hatalar Ayarlar sayfasında alanların yanında kalır.
+        if (await Settings.SaveAsync())
+            CompletePendingNavigation();
+        else
+            CancelPendingNavigation();
+    }
+
+    // Kal: menü seçimini açık sayfaya geri döndür.
+    private void CancelPendingNavigation()
+    {
+        PendingNavigation = null;
+        SelectedNavigationItem = _pageItem;
+    }
+
+    private void CompletePendingNavigation()
+    {
+        var target = _pendingNavigation;
+        PendingNavigation = null;
+        if (target is null)
+            return;
+
+        _pageItem = target;
+        OnPropertyChanged(nameof(CurrentPage));
+    }
 
     private NavigationItemViewModel Add(string key, string title, string iconKey, object page)
     {

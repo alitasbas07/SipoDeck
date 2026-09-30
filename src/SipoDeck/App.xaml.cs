@@ -90,10 +90,31 @@ public partial class App
         if (_isExiting)
             return;
 
-        // Ana pencerenin kapatılması uygulamayı sonlandırmaz; tepsiye küçültür.
+        // Ana pencerenin kapatılması varsayılan olarak uygulamayı sonlandırmaz; tepsiye küçültür.
+        // "Sistem tepsisinde çalış" kapalıysa pencereyi kapatmak uygulamayı tamamen kapatır.
         e.Cancel = true;
+
+        if (!ReadRunInSystemTray())
+        {
+            _mainWindow?.Hide();
+            ExitApplication();
+            return;
+        }
+
         _mainWindow?.Hide();
         State = ApplicationState.Background;
+    }
+
+    private bool ReadRunInSystemTray()
+    {
+        try
+        {
+            return Runtime.GetSettingsSnapshot().Application.RunInSystemTray;
+        }
+        catch
+        {
+            return true;
+        }
     }
 
     private void ShowMainWindow()
