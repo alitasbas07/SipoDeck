@@ -13,6 +13,9 @@
         <DataTemplate DataType="{x:Type vm:HomeViewModel}">
             <views:HomeView />
         </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:SettingsViewModel}">
+            <views:SettingsView />
+        </DataTemplate>
         <DataTemplate DataType="{x:Type vm:PlaceholderPageViewModel}">
             <views:PlaceholderView />
         </DataTemplate>
@@ -144,6 +147,33 @@
             <ContentControl Grid.Column="2"
                             Style="{StaticResource PageHostStyle}"
                             Content="{Binding CurrentPage, NotifyOnTargetUpdated=True}" />
+
+            <!-- Kaydedilmemiş ayar uyarısı (içerik alanının üstünde) -->
+            <Grid Grid.Column="2" Background="#B3050505"
+                  Visibility="{Binding IsUnsavedPromptVisible, Converter={StaticResource BooleanToVisibilityConverter}}">
+                <Grid.InputBindings>
+                    <KeyBinding Key="Escape" Command="{Binding UnsavedCancelCommand}" />
+                </Grid.InputBindings>
+                <Border Style="{StaticResource SurfaceCardStyle}" Background="{StaticResource SurfaceElevatedBrush}"
+                        BorderBrush="{StaticResource BorderBrush}" MaxWidth="440"
+                        HorizontalAlignment="Center" VerticalAlignment="Center"
+                        AutomationProperties.Name="Kaydedilmemiş değişiklikler">
+                    <StackPanel>
+                        <TextBlock Style="{StaticResource TextTitle3}" Text="Kaydedilmemiş değişiklikler var" />
+                        <TextBlock Style="{StaticResource TextBodySecondary}" Margin="0,8,0,0"
+                                   TextWrapping="Wrap" TextTrimming="None"
+                                   Text="Ayarlarda kaydetmediğin değişiklikler var. Sayfadan ayrılmadan önce ne yapmak istersin?" />
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,24,0,0">
+                            <Button Style="{StaticResource GhostButtonStyle}" Content="İptal" Margin="0,0,8,0"
+                                    Command="{Binding UnsavedCancelCommand}" />
+                            <Button Style="{StaticResource SecondaryButtonStyle}" Content="Vazgeç" Margin="0,0,12,0"
+                                    Command="{Binding UnsavedDiscardCommand}" />
+                            <Button Style="{StaticResource PrimaryButtonStyle}" Content="Kaydet"
+                                    Command="{Binding UnsavedSaveCommand}" />
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+            </Grid>
         </Grid>
 
         <!-- AÇILIŞ (kabuğun üstünde) -->
