@@ -12,15 +12,20 @@ namespace SipoDeck.Runtime;
 /// SipoDeck'in çalışma motoru. Ayar/profil yüklemeyi, cihaz bağlantısını, Input Engine'i ve
 /// eylem kuyruğunu WPF'ten bağımsız olarak koordine eder. Cihaz bağlı olmasa veya bağlantı
 /// ayarları eksik olsa bile <see cref="RuntimeState.Running"/> durumuna geçer.
+/// Ayar/profil yönetim API'si <c>AppRuntime.Management.cs</c> içindedir.
 /// </summary>
-public sealed class AppRuntime
+public sealed partial class AppRuntime
 {
     private static readonly TimeSpan ReconnectDelay = TimeSpan.FromSeconds(3);
     private static readonly TimeSpan ShutdownTimeout = TimeSpan.FromSeconds(2);
 
     private readonly string? _settingsFilePath;
     private readonly string? _profilesFilePath;
+
+    // Başlat/durdur ve tüm yönetim çağrıları (ayar/profil kaydı, yeniden bağlanma) bu tek kilitle sıralanır;
+    // böylece birbirleriyle yarışmaz ve iç içe kilit alma (deadlock) riski olmaz.
     private readonly SemaphoreSlim _lifecycleLock = new(1, 1);
+    private readonly object _dataLock = new();
     private readonly ProfileManager _profiles = new();
     private readonly DeviceManager _devices = new();
 
@@ -29,11 +34,16 @@ public sealed class AppRuntime
     private ConnectionType _connectionType;
 
     private ActionQueue? _actionQueue;
-    private InputEngine? _inputEngine;
+    private InputEngine? _inputEngine; // Volatile.Read/Interlocked ile erişilir.
     private ITransport? _transport;
     private DeviceConnection? _deviceConnection;
     private ReconnectService? _reconnectService;
     private Task? _singleConnectAttempt;
+    private CancellationTokenSource? _singleConnectCts;
+
+    // Bellekteki gerçek (kaynak) durum; nesneler değiştirilmez, yalnızca referans yenilenir.
+    private AppSettings? _settings;
+    private ProfilesData? _profilesData;
 
     /// <param name="settingsFilePath">Ayar dosyası yolu; verilmezse varsayılan %LOCALAPPDATA% konumu kullanılır.</param>
     /// <param name="profilesFilePath">Profil dosyası yolu; verilmezse varsayılan %LOCALAPPDATA% konumu kullanılır.</param>
@@ -41,6 +51,7 @@ public sealed class AppRuntime
     {
         _settingsFilePath = settingsFilePath;
         _profilesFilePath = profilesFilePath;
+        _profiles.ActiveProfileChanged += OnProfileManagerActiveProfileChanged;
     }
 
     public RuntimeState State => _state;
@@ -73,42 +84,22 @@ public sealed class AppRuntime
 
             try
             {
-                LoadProfiles();
+                var (settings, data) = LoadFromDisk();
 
-                var settings = new SettingsStore(_settingsFilePath).Load();
+                lock (_dataLock)
+                {
+                    _settings = settings;
+                    _profilesData = data;
+                }
+
+                _profiles.ReplaceAll(data.Profiles.Select(p => p.ToProfile()), data.ActiveProfileId);
 
                 _actionQueue = new ActionQueue();
                 _actionQueue.ActionFailed += OnActionFailed;
 
-                _inputEngine = new InputEngine(
-                    _profiles,
-                    _actionQueue,
-                    TimeSpan.FromMilliseconds(settings.Input.LongPressThresholdMilliseconds),
-                    settings.Input.FnKey,
-                    settings.Input.ProfileSwitchMap);
+                Interlocked.Exchange(ref _inputEngine, CreateInputEngine(settings.Input));
 
-                var transport = CreateTransport(settings.Connection);
-                if (transport is not null)
-                {
-                    _transport = transport;
-                    _connectionType = settings.Connection.ConnectionType;
-
-                    _deviceConnection = new DeviceConnection(transport, _connectionType, _devices);
-                    _deviceConnection.EventReceived += OnDeviceEventReceived;
-                    _deviceConnection.DeviceIdentified += OnDeviceIdentified;
-                    _deviceConnection.MessageRejected += OnMessageRejected;
-                    _deviceConnection.StateChanged += OnDeviceConnectionStateChanged;
-
-                    if (settings.Application.AutoReconnect)
-                    {
-                        _reconnectService = new ReconnectService(transport, ReconnectDelay);
-                        _reconnectService.Start();
-                    }
-                    else
-                    {
-                        _singleConnectAttempt = ConnectOnceAsync(transport);
-                    }
-                }
+                BuildConnection(settings);
 
                 SetState(RuntimeState.Running);
             }
@@ -128,6 +119,7 @@ public sealed class AppRuntime
 
     public async Task StopAsync(CancellationToken cancellationToken = default)
     {
+        var events = new List<Action>();
         await _lifecycleLock.WaitAsync(cancellationToken).ConfigureAwait(false);
         try
         {
@@ -136,12 +128,17 @@ public sealed class AppRuntime
 
             SetState(RuntimeState.Stopping);
             await DisposeComponentsAsync().ConfigureAwait(false);
+
+            // Bileşenler kapandı (yeni FN olayı gelmez); henüz yazılmamış aktif profil değişimi kayıpsız yazılır.
+            FlushActiveProfile(events);
             SetState(RuntimeState.Stopped);
         }
         finally
         {
             _lifecycleLock.Release();
         }
+
+        RaiseAll(events);
     }
 
     /// <summary>
@@ -151,14 +148,13 @@ public sealed class AppRuntime
     /// </summary>
     public void Dispatch(IAction action) => _actionQueue?.Dispatch(action);
 
-    private void LoadProfiles()
+    // Kilit altında çağrılır. Diskteki veriyi yükler; aktif profil kimliği geçerli ve etkin bir profile çözülür.
+    private (AppSettings Settings, ProfilesData Data) LoadFromDisk()
     {
+        var settings = new SettingsStore(_settingsFilePath).Load();
         var data = new ProfileStore(_profilesFilePath).Load();
-        foreach (var profileData in data.Profiles)
-            _profiles.Add(profileData.ToProfile());
-
-        if (data.ActiveProfileId is not null)
-            _profiles.SwitchTo(data.ActiveProfileId);
+        data.ActiveProfileId = ResolveActiveProfileId(data);
+        return (settings, data);
     }
 
     private static ITransport? CreateTransport(ConnectionSettings connection) => connection.ConnectionType switch
@@ -174,21 +170,22 @@ public sealed class AppRuntime
         _ => null
     };
 
-    private static async Task ConnectOnceAsync(ITransport transport)
+    private static async Task ConnectOnceAsync(ITransport transport, CancellationToken cancellationToken)
     {
         try
         {
-            await transport.ConnectAsync().ConfigureAwait(false);
+            await transport.ConnectAsync(cancellationToken).ConfigureAwait(false);
         }
         catch
         {
             // Tek seferlik bağlantı denemesi başarısız oldu; DeviceConnectionStateChanged
             // zaten Disconnected bildirir. Otomatik yeniden bağlanma kapalı olduğu için
-            // bir sonraki deneme kullanıcı eylemine (Task 014) bırakılır.
+            // bir sonraki deneme kullanıcı eylemine (ReconnectAsync) bırakılır.
         }
     }
 
-    private void OnDeviceEventReceived(object? sender, IDeviceEvent deviceEvent) => _inputEngine?.Process(deviceEvent);
+    private void OnDeviceEventReceived(object? sender, IDeviceEvent deviceEvent)
+        => Volatile.Read(ref _inputEngine)?.Process(deviceEvent);
 
     private void OnDeviceIdentified(object? sender, Device device)
         => DeviceIdentified?.Invoke(this, new DeviceSnapshot(device.Id, device.Name, device.FirmwareVersion, device.ProtocolVersion, device.ConnectionType));
@@ -203,7 +200,43 @@ public sealed class AppRuntime
 
     private void OnActionFailed(object? sender, ActionFailedEventArgs e) => ActionFailed?.Invoke(this, e);
 
-    private async Task DisposeComponentsAsync()
+    private InputEngine CreateInputEngine(InputSettings input) => new(
+        _profiles,
+        _actionQueue!,
+        TimeSpan.FromMilliseconds(input.LongPressThresholdMilliseconds),
+        input.FnKey,
+        new Dictionary<int, string>(input.ProfileSwitchMap));
+
+    /// <summary>Ayarlara göre transport, cihaz bağlantısı ve (varsa) yeniden bağlanma servisini kurup bağlanmayı başlatır.</summary>
+    private void BuildConnection(AppSettings settings)
+    {
+        var transport = CreateTransport(settings.Connection);
+        if (transport is null)
+            return;
+
+        _transport = transport;
+        _connectionType = settings.Connection.ConnectionType;
+
+        _deviceConnection = new DeviceConnection(transport, _connectionType, _devices);
+        _deviceConnection.EventReceived += OnDeviceEventReceived;
+        _deviceConnection.DeviceIdentified += OnDeviceIdentified;
+        _deviceConnection.MessageRejected += OnMessageRejected;
+        _deviceConnection.StateChanged += OnDeviceConnectionStateChanged;
+
+        if (settings.Application.AutoReconnect)
+        {
+            _reconnectService = new ReconnectService(transport, ReconnectDelay);
+            _reconnectService.Start();
+        }
+        else
+        {
+            _singleConnectCts = new CancellationTokenSource();
+            _singleConnectAttempt = ConnectOnceAsync(transport, _singleConnectCts.Token);
+        }
+    }
+
+    /// <summary>Yeniden bağlanma servisini, cihaz bağlantısını ve transportu kontrollü kapatır (girdi motoru ve kuyruk kalır).</summary>
+    private async Task DisposeConnectionAsync()
     {
         _reconnectService?.Dispose();
         _reconnectService = null;
@@ -220,6 +253,7 @@ public sealed class AppRuntime
 
         if (_singleConnectAttempt is not null)
         {
+            _singleConnectCts?.Cancel();
             try
             {
                 await _singleConnectAttempt.WaitAsync(ShutdownTimeout).ConfigureAwait(false);
@@ -231,6 +265,9 @@ public sealed class AppRuntime
 
             _singleConnectAttempt = null;
         }
+
+        _singleConnectCts?.Dispose();
+        _singleConnectCts = null;
 
         if (_transport is not null)
         {
@@ -246,8 +283,14 @@ public sealed class AppRuntime
             _transport = null;
         }
 
-        _inputEngine?.Dispose();
-        _inputEngine = null;
+        _deviceConnectionState = ConnectionState.Disconnected;
+    }
+
+    private async Task DisposeComponentsAsync()
+    {
+        await DisposeConnectionAsync().ConfigureAwait(false);
+
+        Interlocked.Exchange(ref _inputEngine, null)?.Dispose();
 
         if (_actionQueue is not null)
         {
@@ -255,8 +298,6 @@ public sealed class AppRuntime
             await _actionQueue.DisposeAsync().ConfigureAwait(false);
             _actionQueue = null;
         }
-
-        _deviceConnectionState = ConnectionState.Disconnected;
     }
 
     private void SetState(RuntimeState state)

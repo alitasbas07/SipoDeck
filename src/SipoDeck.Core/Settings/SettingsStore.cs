@@ -19,9 +19,13 @@ public sealed class SettingsStore
     };
 
     private readonly string _filePath;
+    private readonly bool _usesDefaultPath;
 
     public SettingsStore(string? filePath = null)
-        => _filePath = filePath ?? AppDataPaths.SettingsFile;
+    {
+        _usesDefaultPath = filePath is null;
+        _filePath = filePath ?? AppDataPaths.SettingsFile;
+    }
 
     public AppSettings Load()
     {
@@ -41,8 +45,10 @@ public sealed class SettingsStore
 
     public void Save(AppSettings settings)
     {
-        AppDataPaths.EnsureRootExists();
+        if (_usesDefaultPath)
+            AppDataPaths.EnsureRootExists();
+
         var json = JsonSerializer.Serialize(settings, Options);
-        File.WriteAllText(_filePath, json);
+        AtomicFile.WriteAllText(_filePath, json);
     }
 }

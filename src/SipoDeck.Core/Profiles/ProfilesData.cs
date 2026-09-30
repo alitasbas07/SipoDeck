@@ -1,3 +1,6 @@
+using System.Text.Json;
+using System.Text.Json.Serialization;
+
 namespace SipoDeck.Core.Profiles;
 
 /// <summary>
@@ -6,11 +9,22 @@ namespace SipoDeck.Core.Profiles;
 /// </summary>
 public sealed class ProfilesData
 {
+    private static readonly JsonSerializerOptions CloneOptions = new()
+    {
+        PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+        AllowOutOfOrderMetadataProperties = true,
+        Converters = { new JsonStringEnumConverter() }
+    };
+
     public int Version { get; set; } = 1;
 
     public string? ActiveProfileId { get; set; }
 
     public List<ProfileData> Profiles { get; set; } = new();
+
+    /// <summary>Verinin bağımsız derin kopyasını döndürür (JSON gidiş-dönüşü; eylemler dahil).</summary>
+    public ProfilesData Clone()
+        => JsonSerializer.Deserialize<ProfilesData>(JsonSerializer.Serialize(this, CloneOptions), CloneOptions) ?? new ProfilesData();
 
     /// <summary>
     /// İlk çalıştırmada sunulacak, kullanıcı tarafından değiştirilebilen/silinebilen
