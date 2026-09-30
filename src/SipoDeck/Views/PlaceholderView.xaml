@@ -1,0 +1,47 @@
+<UserControl x:Class="SipoDeck.Views.PlaceholderView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             Focusable="False">
+
+    <UserControl.Resources>
+        <!-- Sayfa başlığına göre boş durum ikonu (design-system §10.e) -->
+        <Style x:Key="PlaceholderEmptyStateStyle" TargetType="HeaderedContentControl" BasedOn="{StaticResource EmptyStateStyle}">
+            <Setter Property="Tag" Value="{StaticResource IconActions}" />
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding Title}" Value="Deck">
+                    <Setter Property="Tag" Value="{StaticResource IconDeck}" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Title}" Value="Profiller">
+                    <Setter Property="Tag" Value="{StaticResource IconProfiles}" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Title}" Value="Eylemler">
+                    <Setter Property="Tag" Value="{StaticResource IconActions}" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Title}" Value="Cihazlar">
+                    <Setter Property="Tag" Value="{StaticResource IconDevices}" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Title}" Value="Bildirimler">
+                    <Setter Property="Tag" Value="{StaticResource IconNotifications}" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Title}" Value="Ayarlar">
+                    <Setter Property="Tag" Value="{StaticResource IconSettings}" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+    </UserControl.Resources>
+
+    <Grid Margin="{StaticResource PagePadding}">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <TextBlock Style="{StaticResource TextTitle1}" Text="{Binding Title}" />
+
+        <HeaderedContentControl Grid.Row="1" Margin="0,0,0,64"
+                                Style="{StaticResource PlaceholderEmptyStateStyle}"
+                                Header="Henüz hazır değil"
+                                Content="{Binding Description}"
+                                AutomationProperties.Name="Henüz hazır değil" />
+    </Grid>
+</UserControl>

@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
@@ -12,6 +12,14 @@
   <ItemGroup>
     <ProjectReference Include="..\SipoDeck.Core\SipoDeck.Core.csproj" />
     <ProjectReference Include="..\SipoDeck.Runtime\SipoDeck.Runtime.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="Assets\Video\**" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.2" />
   </ItemGroup>
 
 </Project>

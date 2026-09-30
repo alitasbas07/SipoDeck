@@ -2,6 +2,7 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.Windows;
 using SipoDeck.Runtime;
+using SipoDeck.ViewModels;
 
 namespace SipoDeck;
 
@@ -16,6 +17,7 @@ public partial class App
 {
     private TrayIcon? _trayIcon;
     private MainWindow? _mainWindow;
+    private ShellViewModel? _shell;
     private bool _isExiting;
 
     public ApplicationState State { get; private set; } = ApplicationState.Starting;
@@ -41,10 +43,13 @@ public partial class App
             Debug.WriteLine($"[SipoDeck] Runtime başlatılamadı: {ex.Message}");
         }
 
-        _mainWindow = new MainWindow();
+        _shell = new ShellViewModel(Runtime, Dispatcher);
+        _mainWindow = new MainWindow { DataContext = _shell };
         _mainWindow.Closing += OnMainWindowClosing;
 
         _trayIcon = new TrayIcon(onShow: ShowMainWindow, onExit: ExitApplication);
+        _trayIcon.UpdateText(_shell.Status.TrayTooltipText);
+        _shell.Status.PropertyChanged += OnStatusPropertyChanged;
 
         _mainWindow.Show();
         State = ApplicationState.Running;
@@ -72,6 +77,12 @@ public partial class App
         {
             Debug.WriteLine($"[SipoDeck] Windows başlangıç ayarı uygulanamadı: {ex.Message}");
         }
+    }
+
+    private void OnStatusPropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(StatusViewModel.TrayTooltipText) && _shell is not null)
+            _trayIcon?.UpdateText(_shell.Status.TrayTooltipText);
     }
 
     private void OnMainWindowClosing(object? sender, CancelEventArgs e)
@@ -109,6 +120,12 @@ public partial class App
         catch (Exception ex)
         {
             Debug.WriteLine($"[SipoDeck] Runtime durdurulurken hata: {ex.Message}");
+        }
+
+        if (_shell is not null)
+        {
+            _shell.Status.PropertyChanged -= OnStatusPropertyChanged;
+            _shell.Dispose();
         }
 
         _trayIcon?.Dispose();

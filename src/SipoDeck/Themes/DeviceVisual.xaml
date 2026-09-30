@@ -1,0 +1,293 @@
+<!--
+    SipoDeck — 12 tuşlu cihazın XAML ile çizilmiş gösterimi.
+    Kaynak: design-system.md §12 (Ana Sayfa) ve §10.d.
+
+    Yerleşim: 4 sütun × 3 satır (yatay). Tuş numarası soldan sağa, yukarıdan aşağı 1–12.
+    Derinlik yalnızca gri tonlar, 1 px ışık çizgileri ve siyah → şeffaf maske ile kurulur.
+
+    Kullanım (Ana Sayfa, yalnızca gösterim):
+        <Viewbox MaxWidth="520" MaxHeight="420" Stretch="Uniform">
+            <ListBox Style="{StaticResource DeviceVisualStyle}"
+                     Tag="{Binding ConnectionState}"
+                     IsHitTestVisible="False" Focusable="False" />
+        </Viewbox>
+    ItemsSource verilmezse 1..12 yer tutucu tuşlar (DeviceKeyPlaceholders) gösterilir.
+    Deck ekranı (017) ItemsSource + ItemTemplate verip seçim (SelectedItem) kullanabilir;
+    seçili tuş: beyaz yüz + siyah içerik.
+    Tag = Disconnected / Error / Stopped / Faulted → cihaz 260 ms'de %40 opaklığa söner.
+-->
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:sys="clr-namespace:System;assembly=mscorlib">
+
+    <ResourceDictionary.MergedDictionaries>
+        <ResourceDictionary Source="/SipoDeck;component/Themes/Colors.xaml" />
+        <ResourceDictionary Source="/SipoDeck;component/Themes/Typography.xaml" />
+        <ResourceDictionary Source="/SipoDeck;component/Themes/Metrics.xaml" />
+        <ResourceDictionary Source="/SipoDeck;component/Themes/Motion.xaml" />
+    </ResourceDictionary.MergedDictionaries>
+
+    <!-- 1..12 yer tutucu tuşlar -->
+    <x:Array x:Key="DeviceKeyPlaceholders" Type="sys:Int32">
+        <sys:Int32>1</sys:Int32>
+        <sys:Int32>2</sys:Int32>
+        <sys:Int32>3</sys:Int32>
+        <sys:Int32>4</sys:Int32>
+        <sys:Int32>5</sys:Int32>
+        <sys:Int32>6</sys:Int32>
+        <sys:Int32>7</sys:Int32>
+        <sys:Int32>8</sys:Int32>
+        <sys:Int32>9</sys:Int32>
+        <sys:Int32>10</sys:Int32>
+        <sys:Int32>11</sys:Int32>
+        <sys:Int32>12</sys:Int32>
+    </x:Array>
+
+    <!-- Varsayılan tuş içeriği: sol üstte küçük mono numara. -->
+    <DataTemplate x:Key="DeviceKeyIndexTemplate">
+        <TextBlock Text="{Binding}"
+                   Margin="10,8,0,0"
+                   HorizontalAlignment="Left" VerticalAlignment="Top"
+                   FontFamily="{StaticResource FontMono}" FontSize="10"
+                   Opacity="0.55" />
+    </DataTemplate>
+
+    <!-- Boş tuş içeriği: açılış ekranı yer tutucu silüeti için (ItemTemplate). -->
+    <DataTemplate x:Key="DeviceKeyBlankTemplate">
+        <Grid />
+    </DataTemplate>
+
+    <!-- Tek tuş -->
+    <Style x:Key="DeviceKeyStyle" TargetType="ListBoxItem">
+        <Setter Property="Width" Value="{StaticResource DeviceKeySize}" />
+        <Setter Property="Height" Value="{StaticResource DeviceKeySize}" />
+        <Setter Property="Margin" Value="8" />
+        <Setter Property="Padding" Value="0" />
+        <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}" />
+        <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+        <Setter Property="VerticalContentAlignment" Value="Stretch" />
+        <Setter Property="SnapsToDevicePixels" Value="True" />
+        <Setter Property="Cursor" Value="Hand" />
+        <Setter Property="FocusVisualStyle">
+            <Setter.Value>
+                <Style>
+                    <Setter Property="Control.Template">
+                        <Setter.Value>
+                            <ControlTemplate>
+                                <Border Margin="-4" CornerRadius="16" BorderThickness="1"
+                                        BorderBrush="{StaticResource FocusRingBrush}" SnapsToDevicePixels="True" />
+                            </ControlTemplate>
+                        </Setter.Value>
+                    </Setter>
+                </Style>
+            </Setter.Value>
+        </Setter>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ListBoxItem">
+                    <Grid x:Name="Root">
+                        <VisualStateManager.VisualStateGroups>
+                            <VisualStateGroup x:Name="CommonStates">
+                                <VisualStateGroup.Transitions>
+                                    <VisualTransition GeneratedDuration="{StaticResource DurationFast}"
+                                                      GeneratedEasingFunction="{StaticResource EaseHover}" />
+                                </VisualStateGroup.Transitions>
+                                <VisualState x:Name="Normal" />
+                                <VisualState x:Name="MouseOver">
+                                    <Storyboard>
+                                        <DoubleAnimation Storyboard.TargetName="HoverFace" Storyboard.TargetProperty="Opacity" To="1" Duration="0" />
+                                    </Storyboard>
+                                </VisualState>
+                                <VisualState x:Name="Disabled" />
+                            </VisualStateGroup>
+                            <VisualStateGroup x:Name="SelectionStates">
+                                <VisualStateGroup.Transitions>
+                                    <VisualTransition GeneratedDuration="{StaticResource DurationBase}"
+                                                      GeneratedEasingFunction="{StaticResource EaseOut}" />
+                                </VisualStateGroup.Transitions>
+                                <VisualState x:Name="Unselected" />
+                                <VisualState x:Name="Selected">
+                                    <Storyboard>
+                                        <DoubleAnimation Storyboard.TargetName="SelectedFace" Storyboard.TargetProperty="Opacity" To="1" Duration="0" />
+                                        <DoubleAnimation Storyboard.TargetName="SelectedContent" Storyboard.TargetProperty="Opacity" To="1" Duration="0" />
+                                        <DoubleAnimation Storyboard.TargetName="NormalContent" Storyboard.TargetProperty="Opacity" To="0" Duration="0" />
+                                    </Storyboard>
+                                </VisualState>
+                                <VisualState x:Name="SelectedUnfocused">
+                                    <Storyboard>
+                                        <DoubleAnimation Storyboard.TargetName="SelectedFace" Storyboard.TargetProperty="Opacity" To="1" Duration="0" />
+                                        <DoubleAnimation Storyboard.TargetName="SelectedContent" Storyboard.TargetProperty="Opacity" To="1" Duration="0" />
+                                        <DoubleAnimation Storyboard.TargetName="NormalContent" Storyboard.TargetProperty="Opacity" To="0" Duration="0" />
+                                    </Storyboard>
+                                </VisualState>
+                            </VisualStateGroup>
+                        </VisualStateManager.VisualStateGroups>
+
+                        <!-- Tuş yan yüzü: 3 px aşağı kaydırılmış koyu gövde (fiziksel derinlik) -->
+                        <Border Margin="0,3,0,-3" CornerRadius="{StaticResource RadiusDeviceKey}"
+                                Background="{StaticResource DeviceKeySideBrush}" />
+                        <!-- Tuş yüzü -->
+                        <Border x:Name="Face" CornerRadius="{StaticResource RadiusDeviceKey}"
+                                Background="{StaticResource DeviceKeyFaceBrush}"
+                                BorderBrush="{StaticResource DeviceKeyEdgeBrush}" BorderThickness="1" />
+                        <!-- Üst kenar ışığı: 1 px -->
+                        <Border Height="1" VerticalAlignment="Top" Margin="12,1,12,0"
+                                Background="{StaticResource DeviceKeyHighlightBrush}" />
+                        <Border x:Name="HoverFace" Opacity="0" CornerRadius="{StaticResource RadiusDeviceKey}"
+                                Background="{StaticResource DeviceKeyFaceHoverBrush}"
+                                BorderBrush="{StaticResource BorderStrongBrush}" BorderThickness="1" />
+                        <Border x:Name="SelectedFace" Opacity="0" CornerRadius="{StaticResource RadiusDeviceKey}"
+                                Background="{StaticResource SelectionBgBrush}" />
+                        <ContentPresenter x:Name="NormalContent"
+                                          TextElement.Foreground="{StaticResource TextPrimaryBrush}"
+                                          HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                          VerticalAlignment="{TemplateBinding VerticalContentAlignment}" />
+                        <ContentPresenter x:Name="SelectedContent" Opacity="0"
+                                          TextElement.Foreground="{StaticResource SelectionFgBrush}"
+                                          HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                          VerticalAlignment="{TemplateBinding VerticalContentAlignment}" />
+                    </Grid>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- Cihaz gövdesi + tuş ızgarası -->
+    <Style x:Key="DeviceVisualStyle" TargetType="ListBox">
+        <Setter Property="ItemsSource" Value="{StaticResource DeviceKeyPlaceholders}" />
+        <Setter Property="ItemTemplate" Value="{StaticResource DeviceKeyIndexTemplate}" />
+        <Setter Property="ItemContainerStyle" Value="{StaticResource DeviceKeyStyle}" />
+        <Setter Property="SelectionMode" Value="Single" />
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="BorderThickness" Value="0" />
+        <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+        <Setter Property="HorizontalAlignment" Value="Center" />
+        <Setter Property="VerticalAlignment" Value="Center" />
+        <Setter Property="SnapsToDevicePixels" Value="True" />
+        <Setter Property="ScrollViewer.HorizontalScrollBarVisibility" Value="Disabled" />
+        <Setter Property="ScrollViewer.VerticalScrollBarVisibility" Value="Disabled" />
+        <Setter Property="KeyboardNavigation.DirectionalNavigation" Value="Contained" />
+        <Setter Property="ItemsPanel">
+            <Setter.Value>
+                <ItemsPanelTemplate>
+                    <UniformGrid Rows="3" Columns="4" IsItemsHost="True" />
+                </ItemsPanelTemplate>
+            </Setter.Value>
+        </Setter>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ListBox">
+                    <Grid x:Name="Root" Width="400" Height="324">
+                        <!-- Sahne ışığı: bulanıklaştırılmış düz gri elips (gradient değil).
+                             Canvas içinde: gövde sınırlarının dışına taşar, kırpılmaz. -->
+                        <Canvas IsHitTestVisible="False">
+                            <Canvas.CacheMode>
+                                <BitmapCache EnableClearType="False" SnapsToDevicePixels="False" />
+                            </Canvas.CacheMode>
+                            <Ellipse Canvas.Left="-80" Canvas.Top="200" Width="560" Height="200"
+                                     Fill="{StaticResource StageLightBrush}">
+                                <Ellipse.Effect>
+                                    <BlurEffect Radius="90" KernelType="Gaussian" RenderingBias="Performance" />
+                                </Ellipse.Effect>
+                            </Ellipse>
+                        </Canvas>
+
+                        <!-- Gövde -->
+                        <Border CornerRadius="{StaticResource RadiusDevice}"
+                                Background="{StaticResource DeviceBodyBrush}"
+                                BorderBrush="{StaticResource DeviceBodyEdgeBrush}" BorderThickness="1" />
+                        <!-- Alt yarıda siyah → şeffaf gölgelenme -->
+                        <Border CornerRadius="{StaticResource RadiusDevice}" IsHitTestVisible="False"
+                                Background="{StaticResource MaskDeviceShadeBrush}" />
+                        <!-- Üst kenar ışığı -->
+                        <Border Height="1" VerticalAlignment="Top" Margin="72,1,72,0"
+                                Background="{StaticResource DeviceRimLightBrush}" />
+
+                        <!-- Tuşlar -->
+                        <ItemsPresenter Margin="24,24,24,36" />
+
+                        <!-- Gövdeye kazınmış küçük marka -->
+                        <TextBlock Text="SIPODECK" VerticalAlignment="Bottom" HorizontalAlignment="Center"
+                                   Margin="0,0,0,14" FontFamily="{StaticResource FontMono}" FontSize="9"
+                                   Foreground="{StaticResource TextMutedBrush}" Opacity="0.7" />
+                    </Grid>
+                    <ControlTemplate.Triggers>
+                        <DataTrigger Binding="{Binding Tag, RelativeSource={RelativeSource Self}}" Value="Disconnected">
+                            <DataTrigger.EnterActions>
+                                <BeginStoryboard>
+                                    <Storyboard>
+                                        <DoubleAnimation Storyboard.TargetName="Root" Storyboard.TargetProperty="Opacity" To="0.4"
+                                                         Duration="{StaticResource DurationSlow}" EasingFunction="{StaticResource EaseOut}" />
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </DataTrigger.EnterActions>
+                            <DataTrigger.ExitActions>
+                                <BeginStoryboard>
+                                    <Storyboard>
+                                        <DoubleAnimation Storyboard.TargetName="Root" Storyboard.TargetProperty="Opacity" To="1"
+                                                         Duration="{StaticResource DurationSlow}" EasingFunction="{StaticResource EaseOut}" />
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </DataTrigger.ExitActions>
+                        </DataTrigger>
+                        <DataTrigger Binding="{Binding Tag, RelativeSource={RelativeSource Self}}" Value="Error">
+                            <DataTrigger.EnterActions>
+                                <BeginStoryboard>
+                                    <Storyboard>
+                                        <DoubleAnimation Storyboard.TargetName="Root" Storyboard.TargetProperty="Opacity" To="0.4"
+                                                         Duration="{StaticResource DurationSlow}" EasingFunction="{StaticResource EaseOut}" />
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </DataTrigger.EnterActions>
+                            <DataTrigger.ExitActions>
+                                <BeginStoryboard>
+                                    <Storyboard>
+                                        <DoubleAnimation Storyboard.TargetName="Root" Storyboard.TargetProperty="Opacity" To="1"
+                                                         Duration="{StaticResource DurationSlow}" EasingFunction="{StaticResource EaseOut}" />
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </DataTrigger.ExitActions>
+                        </DataTrigger>
+                        <DataTrigger Binding="{Binding Tag, RelativeSource={RelativeSource Self}}" Value="Stopped">
+                            <DataTrigger.EnterActions>
+                                <BeginStoryboard>
+                                    <Storyboard>
+                                        <DoubleAnimation Storyboard.TargetName="Root" Storyboard.TargetProperty="Opacity" To="0.4"
+                                                         Duration="{StaticResource DurationSlow}" EasingFunction="{StaticResource EaseOut}" />
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </DataTrigger.EnterActions>
+                            <DataTrigger.ExitActions>
+                                <BeginStoryboard>
+                                    <Storyboard>
+                                        <DoubleAnimation Storyboard.TargetName="Root" Storyboard.TargetProperty="Opacity" To="1"
+                                                         Duration="{StaticResource DurationSlow}" EasingFunction="{StaticResource EaseOut}" />
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </DataTrigger.ExitActions>
+                        </DataTrigger>
+                        <DataTrigger Binding="{Binding Tag, RelativeSource={RelativeSource Self}}" Value="Faulted">
+                            <DataTrigger.EnterActions>
+                                <BeginStoryboard>
+                                    <Storyboard>
+                                        <DoubleAnimation Storyboard.TargetName="Root" Storyboard.TargetProperty="Opacity" To="0.4"
+                                                         Duration="{StaticResource DurationSlow}" EasingFunction="{StaticResource EaseOut}" />
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </DataTrigger.EnterActions>
+                            <DataTrigger.ExitActions>
+                                <BeginStoryboard>
+                                    <Storyboard>
+                                        <DoubleAnimation Storyboard.TargetName="Root" Storyboard.TargetProperty="Opacity" To="1"
+                                                         Duration="{StaticResource DurationSlow}" EasingFunction="{StaticResource EaseOut}" />
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </DataTrigger.ExitActions>
+                        </DataTrigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+</ResourceDictionary>

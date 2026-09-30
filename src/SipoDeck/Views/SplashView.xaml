@@ -1,0 +1,148 @@
+<UserControl x:Class="SipoDeck.Views.SplashView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             Background="{StaticResource BgBaseBrush}"
+             Focusable="False"
+             Loaded="OnLoaded" Unloaded="OnUnloaded">
+
+    <UserControl.InputBindings>
+        <KeyBinding Key="Escape" Command="{Binding StartCommand}" />
+    </UserControl.InputBindings>
+
+    <UserControl.Resources>
+        <!-- Açılış zaman çizelgesi (design-system §10.b); kod-behind Loaded'da başlatır. -->
+        <Storyboard x:Key="IntroStoryboard">
+            <DoubleAnimation Storyboard.TargetName="VideoLayer" Storyboard.TargetProperty="Opacity"
+                             From="0" To="1" Duration="{StaticResource DurationCinematicReveal}"
+                             EasingFunction="{StaticResource EaseCinematic}" />
+            <DoubleAnimation Storyboard.TargetName="VideoLayer"
+                             Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleX)"
+                             From="1.04" To="1" Duration="0:0:1.8" EasingFunction="{StaticResource EaseOutStrong}" />
+            <DoubleAnimation Storyboard.TargetName="VideoLayer"
+                             Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleY)"
+                             From="1.04" To="1" Duration="0:0:1.8" EasingFunction="{StaticResource EaseOutStrong}" />
+
+            <DoubleAnimation Storyboard.TargetName="Logo" Storyboard.TargetProperty="Opacity"
+                             From="0" To="1" BeginTime="0:0:0.3" Duration="0:0:0.6" EasingFunction="{StaticResource EaseOut}" />
+
+            <DoubleAnimation Storyboard.TargetName="Headline" Storyboard.TargetProperty="Opacity"
+                             From="0" To="1" BeginTime="0:0:0.6" Duration="{StaticResource DurationCinematicText}"
+                             EasingFunction="{StaticResource EaseOutStrong}" />
+            <DoubleAnimation Storyboard.TargetName="Headline"
+                             Storyboard.TargetProperty="(UIElement.RenderTransform).(TranslateTransform.Y)"
+                             From="12" To="0" BeginTime="0:0:0.6" Duration="{StaticResource DurationCinematicText}"
+                             EasingFunction="{StaticResource EaseOutStrong}" />
+
+            <DoubleAnimation Storyboard.TargetName="Description" Storyboard.TargetProperty="Opacity"
+                             From="0" To="1" BeginTime="0:0:0.72" Duration="{StaticResource DurationCinematicText}"
+                             EasingFunction="{StaticResource EaseOutStrong}" />
+            <DoubleAnimation Storyboard.TargetName="Description"
+                             Storyboard.TargetProperty="(UIElement.RenderTransform).(TranslateTransform.Y)"
+                             From="12" To="0" BeginTime="0:0:0.72" Duration="{StaticResource DurationCinematicText}"
+                             EasingFunction="{StaticResource EaseOutStrong}" />
+
+            <DoubleAnimation Storyboard.TargetName="Actions" Storyboard.TargetProperty="Opacity"
+                             From="0" To="1" BeginTime="0:0:0.84" Duration="{StaticResource DurationCinematicText}"
+                             EasingFunction="{StaticResource EaseOutStrong}" />
+            <DoubleAnimation Storyboard.TargetName="Actions"
+                             Storyboard.TargetProperty="(UIElement.RenderTransform).(TranslateTransform.Y)"
+                             From="12" To="0" BeginTime="0:0:0.84" Duration="{StaticResource DurationCinematicText}"
+                             EasingFunction="{StaticResource EaseOutStrong}" />
+
+            <DoubleAnimation Storyboard.TargetName="DontShowAgain" Storyboard.TargetProperty="Opacity"
+                             From="0" To="1" BeginTime="0:0:1.4" Duration="0:0:0.4" EasingFunction="{StaticResource EaseOut}" />
+
+            <DoubleAnimation Storyboard.TargetName="LightSweep"
+                             Storyboard.TargetProperty="(UIElement.RenderTransform).(TranslateTransform.X)"
+                             From="-120" To="120" BeginTime="0:0:1.4" Duration="0:0:1.6" EasingFunction="{StaticResource EaseInOut}" />
+            <DoubleAnimationUsingKeyFrames Storyboard.TargetName="LightSweep" Storyboard.TargetProperty="Opacity" BeginTime="0:0:1.4">
+                <LinearDoubleKeyFrame KeyTime="0:0:0" Value="0" />
+                <LinearDoubleKeyFrame KeyTime="0:0:0.8" Value="0.55" />
+                <LinearDoubleKeyFrame KeyTime="0:0:1.6" Value="0" />
+            </DoubleAnimationUsingKeyFrames>
+        </Storyboard>
+    </UserControl.Resources>
+
+    <Grid x:Name="SplashRoot" Background="{StaticResource BgBaseBrush}" ClipToBounds="True">
+
+        <!-- 1. Video / yer tutucu katmanı -->
+        <Grid x:Name="VideoLayer" Opacity="0" RenderTransformOrigin="0.5,0.4">
+            <Grid.RenderTransform>
+                <ScaleTransform />
+            </Grid.RenderTransform>
+
+            <MediaElement x:Name="IntroVideo"
+                          Visibility="Collapsed"
+                          IsMuted="True"
+                          LoadedBehavior="Manual"
+                          UnloadedBehavior="Close"
+                          Stretch="UniformToFill"
+                          IsHitTestVisible="False"
+                          MediaOpened="OnMediaOpened"
+                          MediaEnded="OnMediaEnded"
+                          MediaFailed="OnMediaFailed" />
+
+            <Grid x:Name="Placeholder">
+                <Viewbox MaxWidth="640" Stretch="Uniform" Margin="64,72,64,300" VerticalAlignment="Center">
+                    <Grid>
+                        <ListBox Style="{StaticResource DeviceVisualStyle}"
+                                 ItemTemplate="{StaticResource DeviceKeyBlankTemplate}"
+                                 IsHitTestVisible="False" Focusable="False" />
+                        <Rectangle x:Name="LightSweep" Width="80" Height="1" Margin="0,1,0,0"
+                                   VerticalAlignment="Top" HorizontalAlignment="Center"
+                                   Fill="{StaticResource TextPrimaryBrush}" Opacity="0">
+                            <Rectangle.RenderTransform>
+                                <TranslateTransform />
+                            </Rectangle.RenderTransform>
+                        </Rectangle>
+                    </Grid>
+                </Viewbox>
+                <Rectangle Fill="{StaticResource MaskVignetteBrush}" IsHitTestVisible="False" />
+            </Grid>
+        </Grid>
+
+        <!-- 2-3. Maskeler -->
+        <Rectangle Height="160" VerticalAlignment="Top" Fill="{StaticResource MaskFadeFromTopBrush}" IsHitTestVisible="False" />
+        <Rectangle Height="440" VerticalAlignment="Bottom" Fill="{StaticResource MaskFadeFromBottomBrush}" IsHitTestVisible="False" />
+
+        <!-- 4. Logo -->
+        <StackPanel x:Name="Logo" Opacity="0" Orientation="Horizontal" Height="24"
+                    HorizontalAlignment="Left" VerticalAlignment="Top" Margin="40,30,0,0"
+                    AutomationProperties.Name="SipoDeck">
+            <ContentControl Style="{StaticResource IconLogo20}" />
+            <TextBlock Style="{StaticResource TextWordmarkLarge}" Text="SipoDeck" Margin="12,0,0,0" VerticalAlignment="Center" />
+        </StackPanel>
+
+        <!-- 5. Metin bloğu -->
+        <StackPanel HorizontalAlignment="Left" VerticalAlignment="Bottom" Margin="64,0,64,64" MaxWidth="560">
+            <TextBlock x:Name="Headline" Opacity="0" Style="{StaticResource TextDisplay}"
+                       Text="Kontrol, parmaklarının ucunda.">
+                <TextBlock.RenderTransform>
+                    <TranslateTransform />
+                </TextBlock.RenderTransform>
+            </TextBlock>
+            <TextBlock x:Name="Description" Opacity="0" Style="{StaticResource TextBodyLarge}"
+                       Margin="0,16,0,0" MaxWidth="440" HorizontalAlignment="Left"
+                       Text="Cihazını bağla, tuşlarını düzenle ve çalışma alanını kontrol et.">
+                <TextBlock.RenderTransform>
+                    <TranslateTransform />
+                </TextBlock.RenderTransform>
+            </TextBlock>
+            <StackPanel x:Name="Actions" Opacity="0" Orientation="Horizontal" Margin="0,40,0,0">
+                <StackPanel.RenderTransform>
+                    <TranslateTransform />
+                </StackPanel.RenderTransform>
+                <Button x:Name="StartButton" Style="{StaticResource PrimaryButtonStyle}" Content="Başla" MinWidth="120"
+                        IsDefault="True" Command="{Binding StartCommand}" AutomationProperties.Name="Başla" />
+                <Button Style="{StaticResource SecondaryButtonStyle}" Content="Cihaz bağla" Margin="12,0,0,0"
+                        Command="{Binding ConnectDeviceCommand}" AutomationProperties.Name="Cihaz bağla" />
+            </StackPanel>
+        </StackPanel>
+
+        <!-- 6. Bir daha gösterme -->
+        <CheckBox x:Name="DontShowAgain" Opacity="0" Style="{StaticResource QuietCheckBoxStyle}"
+                  Content="Bir daha gösterme" IsChecked="{Binding DontShowSplashAgain, Mode=TwoWay}"
+                  HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,0,64,76"
+                  AutomationProperties.Name="Bir daha gösterme" />
+    </Grid>
+</UserControl>

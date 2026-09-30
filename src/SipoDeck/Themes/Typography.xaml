@@ -1,0 +1,168 @@
+<!--
+    SipoDeck — Tipografi kaynakları.
+    Kaynak: docs/design/design-system.md §3.
+
+    Font dosyası pakete EKLENMEZ; sistem fontları kullanılır.
+    Inter kuruluysa o kullanılır, yoksa Segoe UI Variable → Segoe UI.
+    Not: WPF TextBlock harf aralığı (tracking) desteklemez; ritim boyut/ağırlık/satır yüksekliği ile kurulur.
+    Overline metinleri kaynakta doğrudan BÜYÜK HARF yazılır (Türkçe İ/I dikkat: "AKTİF PROFİL").
+-->
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:sys="clr-namespace:System;assembly=mscorlib">
+
+    <ResourceDictionary.MergedDictionaries>
+        <ResourceDictionary Source="/SipoDeck;component/Themes/Colors.xaml" />
+    </ResourceDictionary.MergedDictionaries>
+
+    <!-- ============ Font aileleri ============ -->
+    <FontFamily x:Key="FontSans">Inter, Segoe UI Variable Text, Segoe UI</FontFamily>
+    <FontFamily x:Key="FontDisplay">Inter, Segoe UI Variable Display, Segoe UI</FontFamily>
+    <FontFamily x:Key="FontMono">JetBrains Mono, Cascadia Mono, Consolas</FontFamily>
+    <FontFamily x:Key="FontIcons">Segoe Fluent Icons, Segoe MDL2 Assets</FontFamily>
+
+    <!-- ============ Boyut ölçeği (DIP) ============ -->
+    <sys:Double x:Key="FontSizeDisplay">40</sys:Double>
+    <sys:Double x:Key="FontSizeTitle1">28</sys:Double>
+    <sys:Double x:Key="FontSizeTitle2">20</sys:Double>
+    <sys:Double x:Key="FontSizeTitle3">16</sys:Double>
+    <sys:Double x:Key="FontSizeBodyLarge">16</sys:Double>
+    <sys:Double x:Key="FontSizeBody">14</sys:Double>
+    <sys:Double x:Key="FontSizeBodySmall">13</sys:Double>
+    <sys:Double x:Key="FontSizeCaption">12</sys:Double>
+    <sys:Double x:Key="FontSizeOverline">11</sys:Double>
+    <sys:Double x:Key="FontSizeMono">13</sys:Double>
+    <sys:Double x:Key="FontSizeMonoSmall">11</sys:Double>
+    <sys:Double x:Key="FontSizeIconGlyph">10</sys:Double>
+
+    <!-- ============ Satır yükseklikleri ============ -->
+    <sys:Double x:Key="LineHeightDisplay">48</sys:Double>
+    <sys:Double x:Key="LineHeightTitle1">36</sys:Double>
+    <sys:Double x:Key="LineHeightTitle2">28</sys:Double>
+    <sys:Double x:Key="LineHeightTitle3">24</sys:Double>
+    <sys:Double x:Key="LineHeightBodyLarge">26</sys:Double>
+    <sys:Double x:Key="LineHeightBody">22</sys:Double>
+    <sys:Double x:Key="LineHeightBodySmall">20</sys:Double>
+    <sys:Double x:Key="LineHeightCaption">16</sys:Double>
+    <sys:Double x:Key="LineHeightOverline">16</sys:Double>
+    <sys:Double x:Key="LineHeightMono">20</sys:Double>
+
+    <!-- ============ TextBlock stilleri ============ -->
+    <Style x:Key="TextBase" TargetType="TextBlock">
+        <Setter Property="FontFamily" Value="{StaticResource FontSans}" />
+        <Setter Property="FontSize" Value="{StaticResource FontSizeBody}" />
+        <Setter Property="FontWeight" Value="Normal" />
+        <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}" />
+        <Setter Property="LineStackingStrategy" Value="BlockLineHeight" />
+        <Setter Property="LineHeight" Value="{StaticResource LineHeightBody}" />
+        <Setter Property="TextWrapping" Value="NoWrap" />
+        <Setter Property="TextTrimming" Value="CharacterEllipsis" />
+        <Setter Property="SnapsToDevicePixels" Value="True" />
+    </Style>
+
+    <!-- Açılış başlığı: "Kontrol, parmaklarının ucunda." -->
+    <Style x:Key="TextDisplay" TargetType="TextBlock" BasedOn="{StaticResource TextBase}">
+        <Setter Property="FontFamily" Value="{StaticResource FontDisplay}" />
+        <Setter Property="FontSize" Value="{StaticResource FontSizeDisplay}" />
+        <Setter Property="FontWeight" Value="SemiBold" />
+        <Setter Property="LineHeight" Value="{StaticResource LineHeightDisplay}" />
+        <Setter Property="TextWrapping" Value="Wrap" />
+        <Setter Property="TextTrimming" Value="None" />
+    </Style>
+
+    <!-- Sayfa başlığı -->
+    <Style x:Key="TextTitle1" TargetType="TextBlock" BasedOn="{StaticResource TextBase}">
+        <Setter Property="FontFamily" Value="{StaticResource FontDisplay}" />
+        <Setter Property="FontSize" Value="{StaticResource FontSizeTitle1}" />
+        <Setter Property="FontWeight" Value="SemiBold" />
+        <Setter Property="LineHeight" Value="{StaticResource LineHeightTitle1}" />
+    </Style>
+
+    <!-- Bölüm başlığı / cihaz adı -->
+    <Style x:Key="TextTitle2" TargetType="TextBlock" BasedOn="{StaticResource TextBase}">
+        <Setter Property="FontFamily" Value="{StaticResource FontDisplay}" />
+        <Setter Property="FontSize" Value="{StaticResource FontSizeTitle2}" />
+        <Setter Property="FontWeight" Value="SemiBold" />
+        <Setter Property="LineHeight" Value="{StaticResource LineHeightTitle2}" />
+    </Style>
+
+    <!-- Kart / boş durum başlığı -->
+    <Style x:Key="TextTitle3" TargetType="TextBlock" BasedOn="{StaticResource TextBase}">
+        <Setter Property="FontSize" Value="{StaticResource FontSizeTitle3}" />
+        <Setter Property="FontWeight" Value="SemiBold" />
+        <Setter Property="LineHeight" Value="{StaticResource LineHeightTitle3}" />
+    </Style>
+
+    <!-- Açılış açıklaması (ikincil renk) -->
+    <Style x:Key="TextBodyLarge" TargetType="TextBlock" BasedOn="{StaticResource TextBase}">
+        <Setter Property="FontSize" Value="{StaticResource FontSizeBodyLarge}" />
+        <Setter Property="LineHeight" Value="{StaticResource LineHeightBodyLarge}" />
+        <Setter Property="Foreground" Value="{StaticResource TextSecondaryBrush}" />
+        <Setter Property="TextWrapping" Value="Wrap" />
+        <Setter Property="TextTrimming" Value="None" />
+    </Style>
+
+    <Style x:Key="TextBody" TargetType="TextBlock" BasedOn="{StaticResource TextBase}" />
+
+    <Style x:Key="TextBodyStrong" TargetType="TextBlock" BasedOn="{StaticResource TextBase}">
+        <Setter Property="FontWeight" Value="SemiBold" />
+    </Style>
+
+    <Style x:Key="TextBodySecondary" TargetType="TextBlock" BasedOn="{StaticResource TextBase}">
+        <Setter Property="Foreground" Value="{StaticResource TextSecondaryBrush}" />
+    </Style>
+
+    <Style x:Key="TextBodySmall" TargetType="TextBlock" BasedOn="{StaticResource TextBase}">
+        <Setter Property="FontSize" Value="{StaticResource FontSizeBodySmall}" />
+        <Setter Property="LineHeight" Value="{StaticResource LineHeightBodySmall}" />
+    </Style>
+
+    <Style x:Key="TextBodySmallStrong" TargetType="TextBlock" BasedOn="{StaticResource TextBodySmall}">
+        <Setter Property="FontWeight" Value="SemiBold" />
+    </Style>
+
+    <Style x:Key="TextCaption" TargetType="TextBlock" BasedOn="{StaticResource TextBase}">
+        <Setter Property="FontSize" Value="{StaticResource FontSizeCaption}" />
+        <Setter Property="LineHeight" Value="{StaticResource LineHeightCaption}" />
+        <Setter Property="Foreground" Value="{StaticResource TextSecondaryBrush}" />
+    </Style>
+
+    <Style x:Key="TextCaptionMuted" TargetType="TextBlock" BasedOn="{StaticResource TextCaption}">
+        <Setter Property="Foreground" Value="{StaticResource TextMutedBrush}" />
+    </Style>
+
+    <!-- Küçük büyük-harf etiket: "AKTİF PROFİL", "SON İŞLEM" -->
+    <Style x:Key="TextOverline" TargetType="TextBlock" BasedOn="{StaticResource TextBase}">
+        <Setter Property="FontSize" Value="{StaticResource FontSizeOverline}" />
+        <Setter Property="FontWeight" Value="SemiBold" />
+        <Setter Property="LineHeight" Value="{StaticResource LineHeightOverline}" />
+        <Setter Property="Foreground" Value="{StaticResource TextMutedBrush}" />
+    </Style>
+
+    <!-- Sistem değerleri, yüzdeler, sürüm, cihaz kimliği -->
+    <Style x:Key="TextMono" TargetType="TextBlock" BasedOn="{StaticResource TextBase}">
+        <Setter Property="FontFamily" Value="{StaticResource FontMono}" />
+        <Setter Property="FontSize" Value="{StaticResource FontSizeMono}" />
+        <Setter Property="LineHeight" Value="{StaticResource LineHeightMono}" />
+    </Style>
+
+    <Style x:Key="TextMonoSmall" TargetType="TextBlock" BasedOn="{StaticResource TextMono}">
+        <Setter Property="FontSize" Value="{StaticResource FontSizeMonoSmall}" />
+        <Setter Property="LineHeight" Value="{StaticResource LineHeightCaption}" />
+        <Setter Property="Foreground" Value="{StaticResource TextMutedBrush}" />
+    </Style>
+
+    <!-- Logo yazısı "SipoDeck" (kabuk: 14; açılış: TextWordmarkLarge 18) -->
+    <Style x:Key="TextWordmark" TargetType="TextBlock" BasedOn="{StaticResource TextBase}">
+        <Setter Property="FontFamily" Value="{StaticResource FontDisplay}" />
+        <Setter Property="FontSize" Value="14" />
+        <Setter Property="FontWeight" Value="SemiBold" />
+        <Setter Property="LineHeight" Value="20" />
+    </Style>
+
+    <Style x:Key="TextWordmarkLarge" TargetType="TextBlock" BasedOn="{StaticResource TextWordmark}">
+        <Setter Property="FontSize" Value="18" />
+        <Setter Property="LineHeight" Value="24" />
+    </Style>
+
+</ResourceDictionary>

@@ -1,0 +1,96 @@
+<!--
+    SipoDeck — Hareket kaynakları: süreler, easing'ler, KeySpline'lar ve ortak Storyboard'lar.
+    Kaynak: docs/design/design-system.md §6.
+
+    İlkeler:
+      - Arayüz hareketi 120–260 ms. Tek istisna: açılış ekranının sinematik girişi (Cinematic*).
+      - Giriş/çıkış: ease-out. Ekranda yer değiştirme: ease-in-out. Ease-in KULLANILMAZ.
+      - Bounce/Elastic/Back easing YASAK. Sürekli animasyon yalnızca "işlem sürüyor" halkası.
+      - Yalnızca Opacity ve RenderTransform (Translate/Scale) canlandırılır; Width/Height/Margin canlandırılmaz.
+-->
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:sys="clr-namespace:System;assembly=mscorlib">
+
+    <!-- ============ Süreler ============ -->
+    <Duration x:Key="DurationInstant">0:0:0</Duration>
+    <Duration x:Key="DurationPress">0:0:0.1</Duration>
+    <Duration x:Key="DurationFast">0:0:0.12</Duration>
+    <Duration x:Key="DurationBase">0:0:0.18</Duration>
+    <Duration x:Key="DurationMedium">0:0:0.22</Duration>
+    <Duration x:Key="DurationSlow">0:0:0.26</Duration>
+    <Duration x:Key="DurationSpin">0:0:0.9</Duration>
+    <Duration x:Key="DurationCinematicText">0:0:0.6</Duration>
+    <Duration x:Key="DurationCinematicReveal">0:0:1.4</Duration>
+
+    <!-- İleride: sistem bilgileri paneli ve işlem bildirimi (bu task'ta kullanılmaz) -->
+    <Duration x:Key="DurationPanelOpen">0:0:0.24</Duration>
+    <Duration x:Key="DurationPanelClose">0:0:0.18</Duration>
+    <Duration x:Key="DurationGaugeFill">0:0:0.26</Duration>
+    <Duration x:Key="DurationToastIn">0:0:0.22</Duration>
+    <Duration x:Key="DurationToastOut">0:0:0.18</Duration>
+    <sys:Double x:Key="SystemPanelAutoCloseSeconds">7</sys:Double>
+    <sys:Double x:Key="ToastLifetimeSeconds">3.5</sys:Double>
+    <sys:Double x:Key="ToastErrorLifetimeSeconds">6</sys:Double>
+
+    <!-- ============ Easing fonksiyonları ============ -->
+    <!-- Standart giriş/çıkış ≈ cubic-bezier(0.33, 1, 0.68, 1) -->
+    <CubicEase x:Key="EaseOut" EasingMode="EaseOut" />
+    <!-- Güçlü ease-out ≈ cubic-bezier(0.23, 1, 0.32, 1): sayfa geçişi, panel, bildirim -->
+    <QuinticEase x:Key="EaseOutStrong" EasingMode="EaseOut" />
+    <!-- Hover / renk-opaklık değişimi (CSS "ease" karşılığı) -->
+    <QuadraticEase x:Key="EaseHover" EasingMode="EaseOut" />
+    <!-- Ekranda yer değiştirme ≈ cubic-bezier(0.77, 0, 0.175, 1) -->
+    <QuarticEase x:Key="EaseInOut" EasingMode="EaseInOut" />
+    <!-- Çekmece/üst panel ≈ cubic-bezier(0.32, 0.72, 0, 1) -->
+    <ExponentialEase x:Key="EaseDrawer" EasingMode="EaseOut" Exponent="6" />
+    <!-- Sinematik yavaş belirme -->
+    <SineEase x:Key="EaseCinematic" EasingMode="EaseOut" />
+
+    <!-- ============ Kesin eğriler (SplineDoubleKeyFrame.KeySpline için) ============ -->
+    <KeySpline x:Key="KeySplineEaseOut" ControlPoint1="0.23,1" ControlPoint2="0.32,1" />
+    <KeySpline x:Key="KeySplineEaseInOut" ControlPoint1="0.77,0" ControlPoint2="0.175,1" />
+    <KeySpline x:Key="KeySplineDrawer" ControlPoint1="0.32,0.72" ControlPoint2="0,1" />
+
+    <!-- ============ Mesafe / ölçek sabitleri ============ -->
+    <sys:Double x:Key="MotionPageOffset">8</sys:Double>
+    <sys:Double x:Key="MotionSplashTextOffset">12</sys:Double>
+    <sys:Double x:Key="MotionToastOffset">-8</sys:Double>
+    <sys:Double x:Key="MotionPressScale">0.97</sys:Double>
+    <sys:Double x:Key="MotionNavPressScale">0.98</sys:Double>
+
+    <!-- ============ Ortak Storyboard'lar ============ -->
+    <!--
+        Hedef öğe, RenderTransform'u YEREL olarak tanımlamalıdır:
+            <Grid.RenderTransform><TranslateTransform /></Grid.RenderTransform>
+        Kullanım:
+            <EventTrigger RoutedEvent="FrameworkElement.Loaded">
+                <BeginStoryboard Storyboard="{StaticResource FadeInUpStoryboard}" />
+            </EventTrigger>
+    -->
+    <Storyboard x:Key="FadeInUpStoryboard">
+        <DoubleAnimation Storyboard.TargetProperty="Opacity"
+                         From="0" To="1"
+                         Duration="{StaticResource DurationMedium}"
+                         EasingFunction="{StaticResource EaseOutStrong}" />
+        <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(TranslateTransform.Y)"
+                         From="8" To="0"
+                         Duration="{StaticResource DurationMedium}"
+                         EasingFunction="{StaticResource EaseOutStrong}" />
+    </Storyboard>
+
+    <Storyboard x:Key="FadeInStoryboard">
+        <DoubleAnimation Storyboard.TargetProperty="Opacity"
+                         From="0" To="1"
+                         Duration="{StaticResource DurationBase}"
+                         EasingFunction="{StaticResource EaseOut}" />
+    </Storyboard>
+
+    <Storyboard x:Key="FadeOutStoryboard">
+        <DoubleAnimation Storyboard.TargetProperty="Opacity"
+                         To="0"
+                         Duration="{StaticResource DurationBase}"
+                         EasingFunction="{StaticResource EaseOut}" />
+    </Storyboard>
+
+</ResourceDictionary>

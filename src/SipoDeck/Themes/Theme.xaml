@@ -1,0 +1,27 @@
+<!--
+    SipoDeck — Tema giriş noktası. App.xaml yalnızca BU dosyayı birleştirir:
+
+        <Application.Resources>
+            <ResourceDictionary>
+                <ResourceDictionary.MergedDictionaries>
+                    <ResourceDictionary Source="/SipoDeck;component/Themes/Theme.xaml" />
+                </ResourceDictionary.MergedDictionaries>
+            </ResourceDictionary>
+        </Application.Resources>
+
+    Sıra önemlidir: temel tokenlar → ikonlar → bileşenler.
+    Her alt sözlük kendi bağımlılıklarını da birleştirir; tek başına da yüklenebilir.
+-->
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <ResourceDictionary.MergedDictionaries>
+        <ResourceDictionary Source="/SipoDeck;component/Themes/Colors.xaml" />
+        <ResourceDictionary Source="/SipoDeck;component/Themes/Typography.xaml" />
+        <ResourceDictionary Source="/SipoDeck;component/Themes/Metrics.xaml" />
+        <ResourceDictionary Source="/SipoDeck;component/Themes/Motion.xaml" />
+        <ResourceDictionary Source="/SipoDeck;component/Themes/Icons.xaml" />
+        <ResourceDictionary Source="/SipoDeck;component/Themes/Controls.xaml" />
+        <ResourceDictionary Source="/SipoDeck;component/Themes/StatusIndicators.xaml" />
+        <ResourceDictionary Source="/SipoDeck;component/Themes/DeviceVisual.xaml" />
+    </ResourceDictionary.MergedDictionaries>
+</ResourceDictionary>
