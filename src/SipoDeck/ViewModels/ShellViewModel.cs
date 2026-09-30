@@ -28,12 +28,13 @@ public sealed class ShellViewModel : ObservableObject, IDisposable
     {
         Status = new StatusViewModel(runtime, dispatcher);
         Settings = new SettingsViewModel(runtime, dispatcher, Status);
+        Profiles = new ProfilesViewModel(runtime, dispatcher);
 
         var items = new List<NavigationItemViewModel>
         {
             Add(HomePageKey, "Ana Sayfa", "IconHome", new HomeViewModel(Status, Navigate)),
             Add(DeckPageKey, "Deck", "IconDeck", new PlaceholderPageViewModel("Deck", "Tuşlara eylem atama yakında burada.")),
-            Add(ProfilesPageKey, "Profiller", "IconProfiles", new PlaceholderPageViewModel("Profiller", "Profil oluşturma ve düzenleme yakında burada.")),
+            Add(ProfilesPageKey, "Profiller", "IconProfiles", Profiles),
             Add(ActionsPageKey, "Eylemler", "IconActions", new PlaceholderPageViewModel("Eylemler", "Eylem kitaplığı yakında burada.")),
             Add(DevicesPageKey, "Cihazlar", "IconDevices", new PlaceholderPageViewModel("Cihazlar", "Cihaz eşleştirme ve yönetimi yakında burada.")),
             Add(NotificationsPageKey, "Bildirimler", "IconNotifications", new PlaceholderPageViewModel("Bildirimler", "İşlem bildirimlerinin geçmişi yakında burada.")),
@@ -50,7 +51,7 @@ public sealed class ShellViewModel : ObservableObject, IDisposable
         UnsavedSaveCommand = new AsyncRelayCommand(ResolveUnsavedSaveAsync);
         UnsavedDiscardCommand = new RelayCommand(() =>
         {
-            Settings.Discard();
+            CurrentGuard?.Discard();
             CompletePendingNavigation();
         });
         UnsavedCancelCommand = new RelayCommand(CancelPendingNavigation);
@@ -60,6 +61,14 @@ public sealed class ShellViewModel : ObservableObject, IDisposable
 
     public SettingsViewModel Settings { get; }
 
+    public ProfilesViewModel Profiles { get; }
+
+    // Açık sayfa kaydedilmemiş taslak tutabiliyorsa onun koruyucusu.
+    private IUnsavedChangesGuard? CurrentGuard => _pageItem.Page as IUnsavedChangesGuard;
+
+    /// <summary>Sayfa değişimi uyarısındaki açıklama (açık sayfaya göre).</summary>
+    public string UnsavedMessage => CurrentGuard?.UnsavedChangesMessage ?? string.Empty;
+
     /// <summary>Kaydedilmemiş ayar varken başka sayfaya geçilmek istendiğinde beklenen hedef; null ise uyarı yok.</summary>
     public NavigationItemViewModel? PendingNavigation
     {
@@ -67,7 +76,10 @@ public sealed class ShellViewModel : ObservableObject, IDisposable
         private set
         {
             if (SetProperty(ref _pendingNavigation, value))
+            {
                 OnPropertyChanged(nameof(IsUnsavedPromptVisible));
+                OnPropertyChanged(nameof(UnsavedMessage));
+            }
         }
     }
 
@@ -95,9 +107,9 @@ public sealed class ShellViewModel : ObservableObject, IDisposable
 
             OnPropertyChanged(nameof(SelectedNavIndex));
 
-            // Ayarlar sayfasında kaydedilmemiş değişiklik varken sayfa değişimi onaya bağlanır:
+            // Açık sayfada kaydedilmemiş değişiklik varken sayfa değişimi onaya bağlanır:
             // menü seçimi hedefi gösterir, sayfa onaya kadar değişmez.
-            if (!ReferenceEquals(value, _pageItem) && ReferenceEquals(_pageItem.Page, Settings) && Settings.HasChanges)
+            if (!ReferenceEquals(value, _pageItem) && CurrentGuard is { HasChanges: true })
             {
                 PendingNavigation = value;
                 return;
@@ -157,13 +169,14 @@ public sealed class ShellViewModel : ObservableObject, IDisposable
     public void Dispose()
     {
         Settings.Dispose();
+        Profiles.Dispose();
         Status.Dispose();
     }
 
     private async Task ResolveUnsavedSaveAsync()
     {
-        // Hata varsa sayfa değişmez; hatalar Ayarlar sayfasında alanların yanında kalır.
-        if (await Settings.SaveAsync())
+        // Hata varsa sayfa değişmez; hatalar açık sayfada alanların yanında kalır.
+        if (CurrentGuard is { } guard && await guard.SaveAsync())
             CompletePendingNavigation();
         else
             CancelPendingNavigation();

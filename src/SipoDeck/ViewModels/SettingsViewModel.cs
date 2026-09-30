@@ -18,7 +18,7 @@ namespace SipoDeck.ViewModels;
 /// Runtime yönetim API'sine gider. Bu ekranda kullanıcı kendi girdiği Host/Port/COM'u görür ve düzenler;
 /// bu değerler loglanmaz.
 /// </summary>
-public sealed class SettingsViewModel : ObservableObject, IDisposable
+public sealed class SettingsViewModel : ObservableObject, IUnsavedChangesGuard, IDisposable
 {
     private const string NumberError = "Geçerli bir sayı girin.";
     private const string ProfileKeyPrefix = "Input.ProfileSwitchMap[";
@@ -206,6 +206,9 @@ public sealed class SettingsViewModel : ObservableObject, IDisposable
     // ---- Durum / hatalar ----
 
     public bool HasChanges => BuildKey() != _baselineKey;
+
+    public string UnsavedChangesMessage =>
+        "Ayarlarda kaydetmediğin değişiklikler var. Sayfadan ayrılmadan önce ne yapmak istersin?";
 
     /// <summary>Kaydedilmemiş taslak varken "Şimdi bağlan" kayıtlı ayarları kullanır; bunu belirtmek için.</summary>
     public bool ConnectUsesSavedNote => HasChanges;
