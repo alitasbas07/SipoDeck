@@ -28,6 +28,13 @@ public sealed class TrayIcon : IDisposable
         _notifyIcon.DoubleClick += (_, _) => onShow();
     }
 
+    /// <summary>İpucu metnini günceller (NotifyIcon.Text en fazla 63 karakter; UI thread'inde çağrılmalı).</summary>
+    public void UpdateText(string text)
+    {
+        const int MaxLength = 63;
+        _notifyIcon.Text = text.Length <= MaxLength ? text : text[..MaxLength];
+    }
+
     public void Dispose()
     {
         _notifyIcon.Visible = false;

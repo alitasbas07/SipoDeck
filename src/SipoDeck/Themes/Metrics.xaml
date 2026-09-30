@@ -1,0 +1,74 @@
+<!--
+    SipoDeck — Ölçü kaynakları: boşluk (4/8 tabanlı), köşe yarıçapları, bileşen ölçüleri.
+    Kaynak: docs/design/design-system.md §4–§5.
+-->
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:sys="clr-namespace:System;assembly=mscorlib">
+
+    <!-- ============ Boşluk ölçeği ============ -->
+    <sys:Double x:Key="Space1">4</sys:Double>
+    <sys:Double x:Key="Space2">8</sys:Double>
+    <sys:Double x:Key="Space3">12</sys:Double>
+    <sys:Double x:Key="Space4">16</sys:Double>
+    <sys:Double x:Key="Space5">20</sys:Double>
+    <sys:Double x:Key="Space6">24</sys:Double>
+    <sys:Double x:Key="Space8">32</sys:Double>
+    <sys:Double x:Key="Space10">40</sys:Double>
+    <sys:Double x:Key="Space12">48</sys:Double>
+    <sys:Double x:Key="Space14">56</sys:Double>
+    <sys:Double x:Key="Space16">64</sys:Double>
+    <sys:Double x:Key="Space20">80</sys:Double>
+
+    <!-- Hazır kalınlıklar -->
+    <Thickness x:Key="PagePadding">56,56,56,40</Thickness>
+    <Thickness x:Key="CardPadding">24</Thickness>
+    <Thickness x:Key="NavListMargin">12,8,12,0</Thickness>
+    <Thickness x:Key="NavFooterPadding">24,20,16,24</Thickness>
+    <Thickness x:Key="ButtonPadding">20,0</Thickness>
+    <Thickness x:Key="ButtonPaddingSmall">14,0</Thickness>
+
+    <!-- ============ Köşe yarıçapları ============ -->
+    <CornerRadius x:Key="RadiusXs">3</CornerRadius>
+    <CornerRadius x:Key="RadiusSm">6</CornerRadius>
+    <CornerRadius x:Key="RadiusMd">8</CornerRadius>
+    <CornerRadius x:Key="RadiusLg">12</CornerRadius>
+    <CornerRadius x:Key="RadiusXl">16</CornerRadius>
+    <CornerRadius x:Key="RadiusDevice">28</CornerRadius>
+    <CornerRadius x:Key="RadiusDeviceKey">12</CornerRadius>
+    <CornerRadius x:Key="RadiusFocusRing">11</CornerRadius>
+    <CornerRadius x:Key="RadiusSystemPanel">0,0,24,24</CornerRadius>
+    <CornerRadius x:Key="RadiusToast">12</CornerRadius>
+
+    <!-- ============ Pencere ve kabuk ============ -->
+    <sys:Double x:Key="WindowWidth">1440</sys:Double>
+    <sys:Double x:Key="WindowHeight">900</sys:Double>
+    <sys:Double x:Key="WindowMinWidth">1280</sys:Double>
+    <sys:Double x:Key="WindowMinHeight">720</sys:Double>
+    <sys:Double x:Key="TitleBarHeight">40</sys:Double>
+    <sys:Double x:Key="CaptionButtonWidth">46</sys:Double>
+    <GridLength x:Key="NavColumnWidth">208</GridLength>
+    <GridLength x:Key="HomeInfoColumnWidth">320</GridLength>
+
+    <!-- ============ Bileşen ölçüleri ============ -->
+    <sys:Double x:Key="ControlHeight">40</sys:Double>
+    <sys:Double x:Key="ControlHeightSmall">32</sys:Double>
+    <sys:Double x:Key="NavItemHeight">40</sys:Double>
+    <sys:Double x:Key="IconButtonSize">32</sys:Double>
+    <sys:Double x:Key="StatusDotSize">8</sys:Double>
+    <sys:Double x:Key="StatusBoxSize">12</sys:Double>
+    <sys:Double x:Key="DeviceKeySize">72</sys:Double>
+    <sys:Double x:Key="DeviceKeyGap">16</sys:Double>
+
+    <!-- ============ İleride: sistem bilgileri paneli ve işlem bildirimi (uygulanmadı) ============ -->
+    <sys:Double x:Key="SystemPanelWidth">520</sys:Double>
+    <sys:Double x:Key="SystemPanelHeight">144</sys:Double>
+    <sys:Double x:Key="SystemPanelHandleWidth">48</sys:Double>
+    <sys:Double x:Key="SystemPanelHandleHeight">4</sys:Double>
+    <sys:Double x:Key="SystemGaugeSize">56</sys:Double>
+    <sys:Double x:Key="SystemGaugeStroke">3</sys:Double>
+    <sys:Double x:Key="SystemGaugeStrokeCritical">5</sys:Double>
+    <sys:Double x:Key="ToastWidth">360</sys:Double>
+    <sys:Double x:Key="ToastOffset">16</sys:Double>
+
+</ResourceDictionary>

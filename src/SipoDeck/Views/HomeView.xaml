@@ -1,0 +1,178 @@
+<UserControl x:Class="SipoDeck.Views.HomeView"
+                 xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                 xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                 Focusable="False">
+
+    <UserControl.Resources>
+        <!-- Durum satırına göre alt başlık (design-system §10.d durum tablosu) -->
+        <Style x:Key="HomeSubtitleStyle" TargetType="TextBlock" BasedOn="{StaticResource TextBodySecondary}">
+            <Setter Property="Margin" Value="0,8,0,0" />
+            <Setter Property="TextWrapping" Value="Wrap" />
+            <Setter Property="TextTrimming" Value="None" />
+            <Setter Property="Text" Value="Cihazın bağlı değil. USB ile bağla veya aynı ağa bağlan." />
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding Status.DeviceName}" Value="{x:Null}">
+                    <Setter Property="Text" Value="Başlamak için SipoDeck cihazını bağla." />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Status.DeviceConnectionState}" Value="Connected">
+                    <Setter Property="Text">
+                        <Setter.Value>
+                            <MultiBinding StringFormat="{}{0} hazır. Tuşların {1} profiliyle eşleşiyor.">
+                                <Binding Path="Status.DeviceName" TargetNullValue="Cihazın" />
+                                <Binding Path="Status.ActiveProfileName" />
+                            </MultiBinding>
+                        </Setter.Value>
+                    </Setter>
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Status.DeviceConnectionState}" Value="Connecting">
+                    <Setter Property="Text">
+                        <Setter.Value>
+                            <Binding Path="Status.DeviceName" StringFormat="{}{0} bekleniyor…" TargetNullValue="Cihaz" />
+                        </Setter.Value>
+                    </Setter>
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+
+        <!-- Bağlı / bağlanıyor: Deck'i düzenle (P) + Sistem bilgileri (S) -->
+        <Style x:Key="ConnectedActionsStyle" TargetType="StackPanel">
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding Status.DeviceConnectionState}" Value="Disconnected">
+                    <Setter Property="Visibility" Value="Collapsed" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Status.DeviceConnectionState}" Value="Error">
+                    <Setter Property="Visibility" Value="Collapsed" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+
+        <!-- Bağlantı yok: Cihaz bağla (P) + Deck'i düzenle (S; cihaz hiç yoksa gizli) -->
+        <Style x:Key="DisconnectedActionsStyle" TargetType="StackPanel">
+            <Setter Property="Visibility" Value="Collapsed" />
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding Status.DeviceConnectionState}" Value="Disconnected">
+                    <Setter Property="Visibility" Value="Visible" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Status.DeviceConnectionState}" Value="Error">
+                    <Setter Property="Visibility" Value="Visible" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+
+        <Style x:Key="EditDeckSecondaryStyle" TargetType="Button" BasedOn="{StaticResource SecondaryButtonStyle}">
+            <Setter Property="Margin" Value="12,0,0,0" />
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding Status.DeviceName}" Value="{x:Null}">
+                    <Setter Property="Visibility" Value="Collapsed" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+    </UserControl.Resources>
+
+    <Grid Margin="{StaticResource PagePadding}">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <!-- Başlık -->
+        <StackPanel Grid.Row="0">
+            <TextBlock Style="{StaticResource TextTitle1}" Text="{Binding GreetingText}" />
+            <TextBlock Style="{StaticResource HomeSubtitleStyle}" />
+        </StackPanel>
+
+        <!-- Runtime hata bandı (yalnızca HasFault) -->
+        <Border Grid.Row="1" Style="{StaticResource SurfaceCardStyle}" Padding="16" Margin="0,24,0,0"
+                MaxWidth="720" HorizontalAlignment="Left"
+                Visibility="{Binding Status.HasFault, Converter={StaticResource BooleanToVisibilityConverter}}"
+                AutomationProperties.Name="Çalışma motoru başlatılamadı">
+            <StackPanel Orientation="Horizontal">
+                <ContentControl Style="{StaticResource Icon20}" Content="{StaticResource IconAlertCircle}"
+                                VerticalAlignment="Top" />
+                <StackPanel Margin="12,0,0,0">
+                    <TextBlock Style="{StaticResource TextBodyStrong}" Text="Çalışma motoru başlatılamadı" />
+                    <TextBlock Style="{StaticResource TextCaption}" TextWrapping="Wrap" TextTrimming="None"
+                               MaxWidth="640" Margin="0,2,0,0" Text="{Binding Status.FaultMessage}" />
+                </StackPanel>
+            </StackPanel>
+        </Border>
+
+        <!-- Sahne -->
+        <Grid Grid.Row="2" Margin="0,32,0,0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="64" />
+                <ColumnDefinition Width="{StaticResource HomeInfoColumnWidth}" />
+            </Grid.ColumnDefinitions>
+
+            <!-- Cihaz -->
+            <Viewbox Grid.Column="0" MaxWidth="560" MaxHeight="440" Stretch="Uniform" Margin="0,0,0,40"
+                     AutomationProperties.Name="SipoDeck cihazı">
+                <ListBox Style="{StaticResource DeviceVisualStyle}"
+                         Tag="{Binding Status.DeviceConnectionState}"
+                         IsHitTestVisible="False" Focusable="False" />
+            </Viewbox>
+
+            <!-- Bilgi sütunu -->
+            <StackPanel Grid.Column="2" VerticalAlignment="Center" Margin="0,0,0,40">
+                <TextBlock Style="{StaticResource TextOverline}" Text="CİHAZ" />
+                <TextBlock Style="{StaticResource TextTitle2}" Margin="0,6,0,0"
+                           Text="{Binding Status.DeviceName, TargetNullValue='Cihaz bulunamadı'}" />
+
+                <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
+                    <ContentControl Style="{StaticResource StatusLabelStyle}"
+                                    Tag="{Binding Status.DeviceConnectionState}">
+                        <TextBlock Style="{StaticResource TextBody}" Text="{Binding Status.ConnectionStateText}" />
+                    </ContentControl>
+                    <TextBlock Style="{StaticResource TextBodySecondary}"
+                               Text="{Binding Status.ConnectionTypeText, StringFormat=' · {0}'}"
+                               Visibility="{Binding Status.ConnectionTypeText, Converter={StaticResource NullToVisibilityConverter}}" />
+                </StackPanel>
+
+                <Rectangle Style="{StaticResource DividerHorizontalStyle}" Margin="0,28,0,24" />
+
+                <TextBlock Style="{StaticResource TextOverline}" Text="AKTİF PROFİL" />
+                <TextBlock Style="{StaticResource TextBody}" Margin="0,6,0,0" Text="{Binding Status.ActiveProfileName}" />
+
+                <!-- Son işlem: veri yoksa grup gizli -->
+                <StackPanel Margin="0,20,0,0"
+                            Visibility="{Binding Status.LastActionText, Converter={StaticResource NullToVisibilityConverter}}">
+                    <TextBlock Style="{StaticResource TextOverline}" Text="SON İŞLEM" />
+                    <StackPanel Orientation="Horizontal" Margin="0,6,0,0">
+                        <ContentControl Style="{StaticResource Icon16}" Content="{StaticResource IconActions}"
+                                        VerticalAlignment="Center" />
+                        <TextBlock Style="{StaticResource TextBody}" Margin="8,0,0,0" Text="{Binding Status.LastActionText}" />
+                    </StackPanel>
+                </StackPanel>
+
+                <!-- Donanım yazılımı: bilinmiyorsa grup gizli -->
+                <StackPanel Margin="0,20,0,0"
+                            Visibility="{Binding Status.FirmwareVersion, Converter={StaticResource NullToVisibilityConverter}}">
+                    <TextBlock Style="{StaticResource TextOverline}" Text="DONANIM YAZILIMI" />
+                    <TextBlock Style="{StaticResource TextMono}" Margin="0,6,0,0"
+                               Foreground="{StaticResource TextSecondaryBrush}"
+                               Text="{Binding Status.FirmwareVersion}" />
+                </StackPanel>
+
+                <!-- Butonlar -->
+                <Grid Margin="0,36,0,0">
+                    <StackPanel Orientation="Horizontal" Style="{StaticResource ConnectedActionsStyle}">
+                        <Button Style="{StaticResource PrimaryButtonStyle}" Content="Deck'i düzenle"
+                                Command="{Binding EditDeckCommand}" AutomationProperties.Name="Deck'i düzenle" />
+                        <Button Style="{StaticResource SecondaryButtonStyle}" Content="Sistem bilgileri" Margin="12,0,0,0"
+                                IsEnabled="False" ToolTip="Yakında" ToolTipService.ShowOnDisabled="True"
+                                AutomationProperties.Name="Sistem bilgileri" />
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" Style="{StaticResource DisconnectedActionsStyle}">
+                        <Button Style="{StaticResource PrimaryButtonStyle}" Content="Cihaz bağla"
+                                Command="{Binding DataContext.ConnectDeviceCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                AutomationProperties.Name="Cihaz bağla" />
+                        <Button Style="{StaticResource EditDeckSecondaryStyle}" Content="Deck'i düzenle"
+                                Command="{Binding EditDeckCommand}" AutomationProperties.Name="Deck'i düzenle" />
+                    </StackPanel>
+                </Grid>
+            </StackPanel>
+        </Grid>
+    </Grid>
+</UserControl>

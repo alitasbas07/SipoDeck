@@ -1,0 +1,882 @@
+<!--
+    SipoDeck — Kontrol stilleri ve şablonları.
+    Kaynak: docs/design/design-system.md §8–§9.
+
+    Durum geçişleri VisualStateManager ile yapılır (WPF Button/ListBoxItem/CheckBox
+    CommonStates/SelectionStates/CheckStates çağırır). VSM geçişleri yarıda kesilebilir ve
+    o anki değerden hedefe yeniden yönlenir (CSS transition davranışı).
+
+    Hover/pressed hâlleri renk animasyonu yerine KATMAN OPAKLIĞI ile yapılır:
+    - Dolgulu/kenarlıklı düğmeler: Foreground renginde bir örtü katmanı (Overlay) 0 → 0.08 → 0.14.
+    - Hayalet/ikon düğmeler ve nav: içerik opaklığı 0.55 (≈ TextSecondary) → 1.
+    Böylece yalnızca Opacity/Transform canlandırılır; donmuş fırça sorunu olmaz.
+
+    Hiçbir renkli vurgu yoktur. Odak halkası: 1 px beyaz dış halka (yalnızca klavye odağında).
+-->
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <ResourceDictionary.MergedDictionaries>
+        <ResourceDictionary Source="/SipoDeck;component/Themes/Colors.xaml" />
+        <ResourceDictionary Source="/SipoDeck;component/Themes/Typography.xaml" />
+        <ResourceDictionary Source="/SipoDeck;component/Themes/Metrics.xaml" />
+        <ResourceDictionary Source="/SipoDeck;component/Themes/Motion.xaml" />
+        <ResourceDictionary Source="/SipoDeck;component/Themes/Icons.xaml" />
+    </ResourceDictionary.MergedDictionaries>
+
+    <!-- =====================================================================
+         ODAK GÖRSELLERİ (FocusVisualStyle) — yalnızca klavye ile odaklanınca görünür
+         ===================================================================== -->
+    <!-- 8 px yarıçaplı kontroller için: 3 px dışarıda, 11 px yarıçap -->
+    <Style x:Key="FocusVisual">
+        <Setter Property="Control.Template">
+            <Setter.Value>
+                <ControlTemplate>
+                    <Border Margin="-3" CornerRadius="{StaticResource RadiusFocusRing}"
+                            BorderThickness="1" BorderBrush="{StaticResource FocusRingBrush}"
+                            SnapsToDevicePixels="True" />
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- Küçük öğeler (CheckBox, metin bağlantıları): 2 px dışarıda, 5 px yarıçap -->
+    <Style x:Key="FocusVisualCompact">
+        <Setter Property="Control.Template">
+            <Setter.Value>
+                <ControlTemplate>
+                    <Border Margin="-2" CornerRadius="5"
+                            BorderThickness="1" BorderBrush="{StaticResource FocusRingBrush}"
+                            SnapsToDevicePixels="True" />
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- Kenara yaslı kare öğeler (başlık düğmeleri): 1 px içeride -->
+    <Style x:Key="FocusVisualInset">
+        <Setter Property="Control.Template">
+            <Setter.Value>
+                <ControlTemplate>
+                    <Border Margin="1" CornerRadius="2"
+                            BorderThickness="1" BorderBrush="{StaticResource FocusRingBrush}"
+                            SnapsToDevicePixels="True" />
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- =====================================================================
+         BUTONLAR
+         ===================================================================== -->
+
+    <!-- Dolgulu ve kenarlıklı düğmelerin ortak şablonu.
+         Overlay katmanı Foreground renginde boyanır: Primary'de siyah örtü, Secondary'de beyaz örtü. -->
+    <ControlTemplate x:Key="SolidButtonTemplate" TargetType="ButtonBase">
+        <Grid x:Name="Root" RenderTransformOrigin="0.5,0.5" SnapsToDevicePixels="True">
+            <Grid.RenderTransform>
+                <ScaleTransform ScaleX="1" ScaleY="1" />
+            </Grid.RenderTransform>
+            <VisualStateManager.VisualStateGroups>
+                <VisualStateGroup x:Name="CommonStates">
+                    <VisualStateGroup.Transitions>
+                        <VisualTransition GeneratedDuration="{StaticResource DurationFast}"
+                                          GeneratedEasingFunction="{StaticResource EaseHover}" />
+                        <VisualTransition To="Pressed" GeneratedDuration="{StaticResource DurationPress}"
+                                          GeneratedEasingFunction="{StaticResource EaseOut}" />
+                        <VisualTransition From="Pressed" GeneratedDuration="{StaticResource DurationBase}"
+                                          GeneratedEasingFunction="{StaticResource EaseOutStrong}" />
+                    </VisualStateGroup.Transitions>
+                    <VisualState x:Name="Normal" />
+                    <VisualState x:Name="MouseOver">
+                        <Storyboard>
+                            <DoubleAnimation Storyboard.TargetName="Overlay" Storyboard.TargetProperty="Opacity" To="0.08" Duration="0" />
+                            <DoubleAnimation Storyboard.TargetName="HoverBorder" Storyboard.TargetProperty="Opacity" To="1" Duration="0" />
+                        </Storyboard>
+                    </VisualState>
+                    <VisualState x:Name="Pressed">
+                        <Storyboard>
+                            <DoubleAnimation Storyboard.TargetName="Overlay" Storyboard.TargetProperty="Opacity" To="0.14" Duration="0" />
+                            <DoubleAnimation Storyboard.TargetName="HoverBorder" Storyboard.TargetProperty="Opacity" To="1" Duration="0" />
+                            <DoubleAnimation Storyboard.TargetName="Root" Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleX)" To="{StaticResource MotionPressScale}" Duration="0" />
+                            <DoubleAnimation Storyboard.TargetName="Root" Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleY)" To="{StaticResource MotionPressScale}" Duration="0" />
+                        </Storyboard>
+                    </VisualState>
+                    <VisualState x:Name="Disabled">
+                        <Storyboard>
+                            <DoubleAnimation Storyboard.TargetName="Root" Storyboard.TargetProperty="Opacity" To="0.32" Duration="0" />
+                        </Storyboard>
+                    </VisualState>
+                </VisualStateGroup>
+            </VisualStateManager.VisualStateGroups>
+
+            <Border x:Name="Bg"
+                    Background="{TemplateBinding Background}"
+                    BorderBrush="{TemplateBinding BorderBrush}"
+                    BorderThickness="{TemplateBinding BorderThickness}"
+                    CornerRadius="{StaticResource RadiusMd}" />
+            <Border x:Name="HoverBorder" Opacity="0"
+                    BorderBrush="{StaticResource BorderStrongBrush}"
+                    BorderThickness="{TemplateBinding BorderThickness}"
+                    CornerRadius="{StaticResource RadiusMd}" />
+            <Border x:Name="Overlay" Opacity="0"
+                    Background="{TemplateBinding Foreground}"
+                    CornerRadius="{StaticResource RadiusMd}" />
+            <ContentPresenter Margin="{TemplateBinding Padding}"
+                              HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                              VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
+                              RecognizesAccessKey="True" />
+        </Grid>
+    </ControlTemplate>
+
+    <!-- Hayalet ve ikon düğmelerin ortak şablonu: zemin yok, içerik 0.55 → 1 opaklık. -->
+    <ControlTemplate x:Key="GhostButtonTemplate" TargetType="ButtonBase">
+        <Grid x:Name="Root" RenderTransformOrigin="0.5,0.5" Background="Transparent" SnapsToDevicePixels="True">
+            <Grid.RenderTransform>
+                <ScaleTransform ScaleX="1" ScaleY="1" />
+            </Grid.RenderTransform>
+            <VisualStateManager.VisualStateGroups>
+                <VisualStateGroup x:Name="CommonStates">
+                    <VisualStateGroup.Transitions>
+                        <VisualTransition GeneratedDuration="{StaticResource DurationFast}"
+                                          GeneratedEasingFunction="{StaticResource EaseHover}" />
+                        <VisualTransition To="Pressed" GeneratedDuration="{StaticResource DurationPress}"
+                                          GeneratedEasingFunction="{StaticResource EaseOut}" />
+                        <VisualTransition From="Pressed" GeneratedDuration="{StaticResource DurationBase}"
+                                          GeneratedEasingFunction="{StaticResource EaseOutStrong}" />
+                    </VisualStateGroup.Transitions>
+                    <VisualState x:Name="Normal" />
+                    <VisualState x:Name="MouseOver">
+                        <Storyboard>
+                            <DoubleAnimation Storyboard.TargetName="Overlay" Storyboard.TargetProperty="Opacity" To="0.06" Duration="0" />
+                            <DoubleAnimation Storyboard.TargetName="Content" Storyboard.TargetProperty="Opacity" To="1" Duration="0" />
+                        </Storyboard>
+                    </VisualState>
+                    <VisualState x:Name="Pressed">
+                        <Storyboard>
+                            <DoubleAnimation Storyboard.TargetName="Overlay" Storyboard.TargetProperty="Opacity" To="0.1" Duration="0" />
+                            <DoubleAnimation Storyboard.TargetName="Content" Storyboard.TargetProperty="Opacity" To="1" Duration="0" />
+                            <DoubleAnimation Storyboard.TargetName="Root" Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleX)" To="{StaticResource MotionPressScale}" Duration="0" />
+                            <DoubleAnimation Storyboard.TargetName="Root" Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleY)" To="{StaticResource MotionPressScale}" Duration="0" />
+                        </Storyboard>
+                    </VisualState>
+                    <VisualState x:Name="Disabled">
+                        <Storyboard>
+                            <DoubleAnimation Storyboard.TargetName="Content" Storyboard.TargetProperty="Opacity" To="0.25" Duration="0" />
+                        </Storyboard>
+                    </VisualState>
+                </VisualStateGroup>
+            </VisualStateManager.VisualStateGroups>
+
+            <Border x:Name="Overlay" Opacity="0"
+                    Background="{TemplateBinding Foreground}"
+                    CornerRadius="{StaticResource RadiusMd}" />
+            <ContentPresenter x:Name="Content" Opacity="0.55" Margin="{TemplateBinding Padding}"
+                              HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                              VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
+                              RecognizesAccessKey="True" />
+        </Grid>
+    </ControlTemplate>
+
+    <Style x:Key="ButtonBaseStyle" TargetType="ButtonBase">
+        <Setter Property="FontFamily" Value="{StaticResource FontSans}" />
+        <Setter Property="FontSize" Value="{StaticResource FontSizeBody}" />
+        <Setter Property="FontWeight" Value="SemiBold" />
+        <Setter Property="Height" Value="{StaticResource ControlHeight}" />
+        <Setter Property="MinWidth" Value="96" />
+        <Setter Property="Padding" Value="{StaticResource ButtonPadding}" />
+        <Setter Property="HorizontalContentAlignment" Value="Center" />
+        <Setter Property="VerticalContentAlignment" Value="Center" />
+        <Setter Property="BorderThickness" Value="0" />
+        <Setter Property="Cursor" Value="Hand" />
+        <Setter Property="SnapsToDevicePixels" Value="True" />
+        <Setter Property="UseLayoutRounding" Value="True" />
+        <Setter Property="FocusVisualStyle" Value="{StaticResource FocusVisual}" />
+        <Setter Property="Template" Value="{StaticResource SolidButtonTemplate}" />
+    </Style>
+
+    <!-- Ana eylem: beyaz dolgu, siyah metin. Ekranda en fazla bir tane. -->
+    <Style x:Key="PrimaryButtonStyle" TargetType="Button" BasedOn="{StaticResource ButtonBaseStyle}">
+        <Setter Property="Background" Value="{StaticResource SelectionBgBrush}" />
+        <Setter Property="Foreground" Value="{StaticResource SelectionFgBrush}" />
+        <Setter Property="BorderBrush" Value="{StaticResource SelectionBgBrush}" />
+        <Setter Property="BorderThickness" Value="0" />
+    </Style>
+
+    <!-- İkincil eylem: şeffaf zemin, ince gri kenarlık, beyaz metin. -->
+    <Style x:Key="SecondaryButtonStyle" TargetType="Button" BasedOn="{StaticResource ButtonBaseStyle}">
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}" />
+        <Setter Property="BorderBrush" Value="{StaticResource BorderBrush}" />
+        <Setter Property="BorderThickness" Value="1" />
+    </Style>
+
+    <!-- Hayalet: metin düğmesi (ör. "Atla", "Eylemi düzenle" küçük bağlamda). -->
+    <Style x:Key="GhostButtonStyle" TargetType="Button" BasedOn="{StaticResource ButtonBaseStyle}">
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}" />
+        <Setter Property="FontWeight" Value="Normal" />
+        <Setter Property="MinWidth" Value="0" />
+        <Setter Property="Padding" Value="{StaticResource ButtonPaddingSmall}" />
+        <Setter Property="Template" Value="{StaticResource GhostButtonTemplate}" />
+    </Style>
+
+    <!-- İkon düğmesi 32×32. Kullanım: Tag="{StaticResource IconRefresh}" ToolTip="Yenile" -->
+    <Style x:Key="IconButtonStyle" TargetType="Button" BasedOn="{StaticResource GhostButtonStyle}">
+        <Setter Property="Width" Value="{StaticResource IconButtonSize}" />
+        <Setter Property="Height" Value="{StaticResource IconButtonSize}" />
+        <Setter Property="MinWidth" Value="0" />
+        <Setter Property="Padding" Value="0" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Grid x:Name="Root" RenderTransformOrigin="0.5,0.5" Background="Transparent" SnapsToDevicePixels="True">
+                        <Grid.RenderTransform>
+                            <ScaleTransform ScaleX="1" ScaleY="1" />
+                        </Grid.RenderTransform>
+                        <VisualStateManager.VisualStateGroups>
+                            <VisualStateGroup x:Name="CommonStates">
+                                <VisualStateGroup.Transitions>
+                                    <VisualTransition GeneratedDuration="{StaticResource DurationFast}"
+                                                      GeneratedEasingFunction="{StaticResource EaseHover}" />
+                                    <VisualTransition To="Pressed" GeneratedDuration="{StaticResource DurationPress}"
+                                                      GeneratedEasingFunction="{StaticResource EaseOut}" />
+                                    <VisualTransition From="Pressed" GeneratedDuration="{StaticResource DurationBase}"
+                                                      GeneratedEasingFunction="{StaticResource EaseOutStrong}" />
+                                </VisualStateGroup.Transitions>
+                                <VisualState x:Name="Normal" />
+                                <VisualState x:Name="MouseOver">
+                                    <Storyboard>
+                                        <DoubleAnimation Storyboard.TargetName="Overlay" Storyboard.TargetProperty="Opacity" To="0.06" Duration="0" />
+                                        <DoubleAnimation Storyboard.TargetName="Content" Storyboard.TargetProperty="Opacity" To="1" Duration="0" />
+                                    </Storyboard>
+                                </VisualState>
+                                <VisualState x:Name="Pressed">
+                                    <Storyboard>
+                                        <DoubleAnimation Storyboard.TargetName="Overlay" Storyboard.TargetProperty="Opacity" To="0.1" Duration="0" />
+                                        <DoubleAnimation Storyboard.TargetName="Content" Storyboard.TargetProperty="Opacity" To="1" Duration="0" />
+                                        <DoubleAnimation Storyboard.TargetName="Root" Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleX)" To="0.94" Duration="0" />
+                                        <DoubleAnimation Storyboard.TargetName="Root" Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleY)" To="0.94" Duration="0" />
+                                    </Storyboard>
+                                </VisualState>
+                                <VisualState x:Name="Disabled">
+                                    <Storyboard>
+                                        <DoubleAnimation Storyboard.TargetName="Content" Storyboard.TargetProperty="Opacity" To="0.25" Duration="0" />
+                                    </Storyboard>
+                                </VisualState>
+                            </VisualStateGroup>
+                        </VisualStateManager.VisualStateGroups>
+                        <Border x:Name="Overlay" Opacity="0"
+                                Background="{TemplateBinding Foreground}"
+                                CornerRadius="{StaticResource RadiusMd}" />
+                        <Grid x:Name="Content" Opacity="0.55">
+                            <ContentControl Style="{StaticResource Icon16}" Content="{TemplateBinding Tag}" />
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Grid>
+                    </Grid>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- =====================================================================
+         PENCERE BAŞLIK DÜĞMELERİ (WindowChrome içinde)
+         Glifler: Segoe Fluent Icons (Win11) → Segoe MDL2 Assets (Win10) aynı kod noktaları.
+             Küçült &#xE921;  Büyüt &#xE922;  Önceki boyut &#xE923;  Kapat &#xE8BB;
+         ===================================================================== -->
+    <Style x:Key="CaptionButtonStyle" TargetType="Button">
+        <Setter Property="Width" Value="{StaticResource CaptionButtonWidth}" />
+        <Setter Property="Height" Value="{StaticResource TitleBarHeight}" />
+        <Setter Property="FontFamily" Value="{StaticResource FontIcons}" />
+        <Setter Property="FontSize" Value="{StaticResource FontSizeIconGlyph}" />
+        <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}" />
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="IsTabStop" Value="False" />
+        <Setter Property="Focusable" Value="False" />
+        <Setter Property="FocusVisualStyle" Value="{StaticResource FocusVisualInset}" />
+        <Setter Property="WindowChrome.IsHitTestVisibleInChrome" Value="True" />
+        <Setter Property="SnapsToDevicePixels" Value="True" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Grid x:Name="Root" Background="Transparent">
+                        <VisualStateManager.VisualStateGroups>
+                            <VisualStateGroup x:Name="CommonStates">
+                                <VisualStateGroup.Transitions>
+                                    <VisualTransition GeneratedDuration="{StaticResource DurationFast}"
+                                                      GeneratedEasingFunction="{StaticResource EaseHover}" />
+                                    <VisualTransition To="Pressed" GeneratedDuration="0" />
+                                </VisualStateGroup.Transitions>
+                                <VisualState x:Name="Normal" />
+                                <VisualState x:Name="MouseOver">
+                                    <Storyboard>
+                                        <DoubleAnimation Storyboard.TargetName="Overlay" Storyboard.TargetProperty="Opacity" To="0.08" Duration="0" />
+                                        <DoubleAnimation Storyboard.TargetName="Glyph" Storyboard.TargetProperty="Opacity" To="1" Duration="0" />
+                                    </Storyboard>
+                                </VisualState>
+                                <VisualState x:Name="Pressed">
+                                    <Storyboard>
+                                        <DoubleAnimation Storyboard.TargetName="Overlay" Storyboard.TargetProperty="Opacity" To="0.12" Duration="0" />
+                                        <DoubleAnimation Storyboard.TargetName="Glyph" Storyboard.TargetProperty="Opacity" To="0.8" Duration="0" />
+                                    </Storyboard>
+                                </VisualState>
+                                <VisualState x:Name="Disabled">
+                                    <Storyboard>
+                                        <DoubleAnimation Storyboard.TargetName="Glyph" Storyboard.TargetProperty="Opacity" To="0.2" Duration="0" />
+                                    </Storyboard>
+                                </VisualState>
+                            </VisualStateGroup>
+                        </VisualStateManager.VisualStateGroups>
+                        <Border x:Name="Overlay" Opacity="0" Background="{StaticResource TextPrimaryBrush}" />
+                        <ContentPresenter x:Name="Glyph" Opacity="0.7"
+                                          HorizontalAlignment="Center" VerticalAlignment="Center" />
+                    </Grid>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- Kapat: hover'da beyaz zemin + siyah glif (seçili alan kuralı; kırmızı YOK). -->
+    <Style x:Key="CaptionCloseButtonStyle" TargetType="Button" BasedOn="{StaticResource CaptionButtonStyle}">
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Grid x:Name="Root" Background="Transparent">
+                        <VisualStateManager.VisualStateGroups>
+                            <VisualStateGroup x:Name="CommonStates">
+                                <VisualStateGroup.Transitions>
+                                    <VisualTransition GeneratedDuration="{StaticResource DurationFast}"
+                                                      GeneratedEasingFunction="{StaticResource EaseHover}" />
+                                    <VisualTransition To="Pressed" GeneratedDuration="0" />
+                                </VisualStateGroup.Transitions>
+                                <VisualState x:Name="Normal" />
+                                <VisualState x:Name="MouseOver">
+                                    <Storyboard>
+                                        <DoubleAnimation Storyboard.TargetName="Fill" Storyboard.TargetProperty="Opacity" To="1" Duration="0" />
+                                        <DoubleAnimation Storyboard.TargetName="GlyphOnFill" Storyboard.TargetProperty="Opacity" To="1" Duration="0" />
+                                    </Storyboard>
+                                </VisualState>
+                                <VisualState x:Name="Pressed">
+                                    <Storyboard>
+                                        <DoubleAnimation Storyboard.TargetName="Fill" Storyboard.TargetProperty="Opacity" To="0.85" Duration="0" />
+                                        <DoubleAnimation Storyboard.TargetName="GlyphOnFill" Storyboard.TargetProperty="Opacity" To="1" Duration="0" />
+                                    </Storyboard>
+                                </VisualState>
+                                <VisualState x:Name="Disabled">
+                                    <Storyboard>
+                                        <DoubleAnimation Storyboard.TargetName="Glyph" Storyboard.TargetProperty="Opacity" To="0.2" Duration="0" />
+                                    </Storyboard>
+                                </VisualState>
+                            </VisualStateGroup>
+                        </VisualStateManager.VisualStateGroups>
+                        <ContentPresenter x:Name="Glyph" Opacity="0.7"
+                                          HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        <Border x:Name="Fill" Opacity="0" Background="{StaticResource SelectionBgBrush}" />
+                        <ContentPresenter x:Name="GlyphOnFill" Opacity="0"
+                                          TextElement.Foreground="{StaticResource SelectionFgBrush}"
+                                          HorizontalAlignment="Center" VerticalAlignment="Center" />
+                    </Grid>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- =====================================================================
+         PENCERE STİLİ (özel başlık — WindowChrome)
+         Kullanım: <Window ... Style="{StaticResource SipoWindowStyle}">
+         .cs GEREKSİNİMİ: MainWindow ctor'una SystemCommands CommandBinding'leri eklenmeli
+         (design-system.md §10.a). Aksi hâlde başlık düğmeleri devre dışı görünür.
+         ===================================================================== -->
+    <Style x:Key="SipoWindowStyle" TargetType="Window">
+        <Setter Property="Background" Value="{StaticResource BgBaseBrush}" />
+        <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}" />
+        <Setter Property="FontFamily" Value="{StaticResource FontSans}" />
+        <Setter Property="FontSize" Value="{StaticResource FontSizeBody}" />
+        <Setter Property="Width" Value="{StaticResource WindowWidth}" />
+        <Setter Property="Height" Value="{StaticResource WindowHeight}" />
+        <Setter Property="MinWidth" Value="{StaticResource WindowMinWidth}" />
+        <Setter Property="MinHeight" Value="{StaticResource WindowMinHeight}" />
+        <Setter Property="ResizeMode" Value="CanResize" />
+        <Setter Property="UseLayoutRounding" Value="True" />
+        <Setter Property="SnapsToDevicePixels" Value="True" />
+        <Setter Property="TextOptions.TextFormattingMode" Value="Ideal" />
+        <Setter Property="WindowChrome.WindowChrome">
+            <Setter.Value>
+                <WindowChrome CaptionHeight="40"
+                              ResizeBorderThickness="6"
+                              GlassFrameThickness="0,0,0,1"
+                              CornerRadius="0"
+                              UseAeroCaptionButtons="False"
+                              NonClientFrameEdges="None" />
+            </Setter.Value>
+        </Setter>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Window">
+                    <Border x:Name="WindowBorder"
+                            Background="{TemplateBinding Background}"
+                            BorderBrush="{StaticResource BorderSubtleBrush}"
+                            BorderThickness="1">
+                        <Grid>
+                            <AdornerDecorator>
+                                <ContentPresenter />
+                            </AdornerDecorator>
+                            <StackPanel x:Name="CaptionButtons"
+                                        Orientation="Horizontal"
+                                        HorizontalAlignment="Right" VerticalAlignment="Top"
+                                        Panel.ZIndex="100"
+                                        WindowChrome.IsHitTestVisibleInChrome="True">
+                                <Button Style="{StaticResource CaptionButtonStyle}"
+                                        Content="&#xE921;" ToolTip="Küçült"
+                                        Command="{x:Static SystemCommands.MinimizeWindowCommand}" />
+                                <Button x:Name="MaximizeButton" Style="{StaticResource CaptionButtonStyle}"
+                                        Content="&#xE922;" ToolTip="Büyüt"
+                                        Command="{x:Static SystemCommands.MaximizeWindowCommand}" />
+                                <Button x:Name="RestoreButton" Style="{StaticResource CaptionButtonStyle}"
+                                        Content="&#xE923;" ToolTip="Önceki boyut" Visibility="Collapsed"
+                                        Command="{x:Static SystemCommands.RestoreWindowCommand}" />
+                                <Button Style="{StaticResource CaptionCloseButtonStyle}"
+                                        Content="&#xE8BB;" ToolTip="Kapat"
+                                        Command="{x:Static SystemCommands.CloseWindowCommand}" />
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <!-- Büyütülmüş pencere ekran kenarından taşar: çerçeve kalınlığı kadar iç boşluk ver. -->
+                        <Trigger Property="WindowState" Value="Maximized">
+                            <Setter TargetName="WindowBorder" Property="BorderThickness" Value="0" />
+                            <Setter TargetName="WindowBorder" Property="Padding"
+                                    Value="{x:Static SystemParameters.WindowResizeBorderThickness}" />
+                            <Setter TargetName="MaximizeButton" Property="Visibility" Value="Collapsed" />
+                            <Setter TargetName="RestoreButton" Property="Visibility" Value="Visible" />
+                        </Trigger>
+                        <Trigger Property="IsActive" Value="False">
+                            <Setter TargetName="CaptionButtons" Property="Opacity" Value="0.6" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- =====================================================================
+         NAVİGASYON (ListBox + ListBoxItem)
+         Kullanım: <ListBox Style="{StaticResource NavListBoxStyle}" SelectedIndex="{Binding SelectedPageIndex}">
+                       <ListBoxItem Tag="{StaticResource IconHome}" Content="Ana Sayfa" />
+                   Aktif öğe: beyaz zemin + siyah ikon/metin.
+         ===================================================================== -->
+    <Style x:Key="NavListBoxItemStyle" TargetType="ListBoxItem">
+        <Setter Property="Height" Value="{StaticResource NavItemHeight}" />
+        <Setter Property="Margin" Value="0,0,0,4" />
+        <Setter Property="Padding" Value="12,0" />
+        <Setter Property="FontFamily" Value="{StaticResource FontSans}" />
+        <Setter Property="FontSize" Value="{StaticResource FontSizeBody}" />
+        <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}" />
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="Cursor" Value="Hand" />
+        <Setter Property="SnapsToDevicePixels" Value="True" />
+        <Setter Property="FocusVisualStyle" Value="{StaticResource FocusVisual}" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ListBoxItem">
+                    <Grid x:Name="Root" Background="Transparent">
+                        <VisualStateManager.VisualStateGroups>
+                            <VisualStateGroup x:Name="CommonStates">
+                                <VisualStateGroup.Transitions>
+                                    <VisualTransition GeneratedDuration="{StaticResource DurationFast}"
+                                                      GeneratedEasingFunction="{StaticResource EaseHover}" />
+                                </VisualStateGroup.Transitions>
+                                <VisualState x:Name="Normal" />
+                                <VisualState x:Name="MouseOver">
+                                    <Storyboard>
+                                        <DoubleAnimation Storyboard.TargetName="HoverBg" Storyboard.TargetProperty="Opacity" To="0.05" Duration="0" />
+                                        <DoubleAnimation Storyboard.TargetName="NormalLayer" Storyboard.TargetProperty="Opacity" To="1" Duration="0" />
+                                    </Storyboard>
+                                </VisualState>
+                                <VisualState x:Name="Disabled">
+                                    <Storyboard>
+                                        <DoubleAnimation Storyboard.TargetName="Root" Storyboard.TargetProperty="Opacity" To="0.35" Duration="0" />
+                                    </Storyboard>
+                                </VisualState>
+                            </VisualStateGroup>
+                            <VisualStateGroup x:Name="SelectionStates">
+                                <VisualStateGroup.Transitions>
+                                    <VisualTransition GeneratedDuration="{StaticResource DurationBase}"
+                                                      GeneratedEasingFunction="{StaticResource EaseOut}" />
+                                    <VisualTransition To="Unselected" GeneratedDuration="{StaticResource DurationFast}"
+                                                      GeneratedEasingFunction="{StaticResource EaseOut}" />
+                                </VisualStateGroup.Transitions>
+                                <VisualState x:Name="Unselected" />
+                                <VisualState x:Name="Selected">
+                                    <Storyboard>
+                                        <DoubleAnimation Storyboard.TargetName="ActiveBg" Storyboard.TargetProperty="Opacity" To="1" Duration="0" />
+                                        <DoubleAnimation Storyboard.TargetName="ActiveLayer" Storyboard.TargetProperty="Opacity" To="1" Duration="0" />
+                                    </Storyboard>
+                                </VisualState>
+                                <VisualState x:Name="SelectedUnfocused">
+                                    <Storyboard>
+                                        <DoubleAnimation Storyboard.TargetName="ActiveBg" Storyboard.TargetProperty="Opacity" To="1" Duration="0" />
+                                        <DoubleAnimation Storyboard.TargetName="ActiveLayer" Storyboard.TargetProperty="Opacity" To="1" Duration="0" />
+                                    </Storyboard>
+                                </VisualState>
+                            </VisualStateGroup>
+                        </VisualStateManager.VisualStateGroups>
+
+                        <Border x:Name="HoverBg" Opacity="0" CornerRadius="{StaticResource RadiusMd}"
+                                Background="{StaticResource TextPrimaryBrush}" />
+                        <StackPanel x:Name="NormalLayer" Opacity="0.55"
+                                    Orientation="Horizontal" VerticalAlignment="Center"
+                                    Margin="{TemplateBinding Padding}"
+                                    TextElement.Foreground="{StaticResource TextPrimaryBrush}">
+                            <ContentControl Style="{StaticResource Icon20}" Content="{TemplateBinding Tag}" />
+                            <ContentPresenter Margin="12,0,0,0" VerticalAlignment="Center" />
+                        </StackPanel>
+                        <Border x:Name="ActiveBg" Opacity="0" CornerRadius="{StaticResource RadiusMd}"
+                                Background="{StaticResource SelectionBgBrush}" />
+                        <StackPanel x:Name="ActiveLayer" Opacity="0"
+                                    Orientation="Horizontal" VerticalAlignment="Center"
+                                    Margin="{TemplateBinding Padding}"
+                                    TextElement.Foreground="{StaticResource SelectionFgBrush}"
+                                    TextElement.FontWeight="SemiBold">
+                            <ContentControl Style="{StaticResource Icon20}" Content="{TemplateBinding Tag}" />
+                            <ContentPresenter Margin="12,0,0,0" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Grid>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <Style x:Key="NavListBoxStyle" TargetType="ListBox">
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="BorderThickness" Value="0" />
+        <Setter Property="Padding" Value="0" />
+        <Setter Property="SelectionMode" Value="Single" />
+        <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+        <Setter Property="KeyboardNavigation.DirectionalNavigation" Value="Contained" />
+        <Setter Property="ScrollViewer.HorizontalScrollBarVisibility" Value="Disabled" />
+        <Setter Property="ScrollViewer.VerticalScrollBarVisibility" Value="Disabled" />
+        <Setter Property="ItemContainerStyle" Value="{StaticResource NavListBoxItemStyle}" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ListBox">
+                    <ItemsPresenter />
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+        <Setter Property="ItemsPanel">
+            <Setter.Value>
+                <ItemsPanelTemplate>
+                    <StackPanel IsItemsHost="True" />
+                </ItemsPanelTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- =====================================================================
+         CHECKBOX — sessiz ("Bir daha gösterme")
+         ===================================================================== -->
+    <Style x:Key="QuietCheckBoxStyle" TargetType="CheckBox">
+        <Setter Property="Foreground" Value="{StaticResource TextSecondaryBrush}" />
+        <Setter Property="FontFamily" Value="{StaticResource FontSans}" />
+        <Setter Property="FontSize" Value="{StaticResource FontSizeCaption}" />
+        <Setter Property="Cursor" Value="Hand" />
+        <Setter Property="FocusVisualStyle" Value="{StaticResource FocusVisualCompact}" />
+        <Setter Property="SnapsToDevicePixels" Value="True" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="CheckBox">
+                    <StackPanel x:Name="Root" Orientation="Horizontal" Background="Transparent">
+                        <VisualStateManager.VisualStateGroups>
+                            <VisualStateGroup x:Name="CommonStates">
+                                <VisualStateGroup.Transitions>
+                                    <VisualTransition GeneratedDuration="{StaticResource DurationFast}"
+                                                      GeneratedEasingFunction="{StaticResource EaseHover}" />
+                                </VisualStateGroup.Transitions>
+                                <VisualState x:Name="Normal" />
+                                <VisualState x:Name="MouseOver">
+                                    <Storyboard>
+                                        <DoubleAnimation Storyboard.TargetName="Label" Storyboard.TargetProperty="Opacity" To="1" Duration="0" />
+                                        <DoubleAnimation Storyboard.TargetName="BoxHover" Storyboard.TargetProperty="Opacity" To="1" Duration="0" />
+                                    </Storyboard>
+                                </VisualState>
+                                <VisualState x:Name="Pressed">
+                                    <Storyboard>
+                                        <DoubleAnimation Storyboard.TargetName="Label" Storyboard.TargetProperty="Opacity" To="1" Duration="0" />
+                                        <DoubleAnimation Storyboard.TargetName="BoxHover" Storyboard.TargetProperty="Opacity" To="1" Duration="0" />
+                                    </Storyboard>
+                                </VisualState>
+                                <VisualState x:Name="Disabled">
+                                    <Storyboard>
+                                        <DoubleAnimation Storyboard.TargetName="Root" Storyboard.TargetProperty="Opacity" To="0.4" Duration="0" />
+                                    </Storyboard>
+                                </VisualState>
+                            </VisualStateGroup>
+                            <VisualStateGroup x:Name="CheckStates">
+                                <VisualStateGroup.Transitions>
+                                    <VisualTransition GeneratedDuration="{StaticResource DurationFast}"
+                                                      GeneratedEasingFunction="{StaticResource EaseOut}" />
+                                </VisualStateGroup.Transitions>
+                                <VisualState x:Name="Unchecked" />
+                                <VisualState x:Name="Checked">
+                                    <Storyboard>
+                                        <DoubleAnimation Storyboard.TargetName="BoxFill" Storyboard.TargetProperty="Opacity" To="1" Duration="0" />
+                                        <DoubleAnimation Storyboard.TargetName="Tick" Storyboard.TargetProperty="Opacity" To="1" Duration="0" />
+                                    </Storyboard>
+                                </VisualState>
+                                <VisualState x:Name="Indeterminate" />
+                            </VisualStateGroup>
+                        </VisualStateManager.VisualStateGroups>
+
+                        <Grid Width="14" Height="14" VerticalAlignment="Center">
+                            <Border x:Name="Box" CornerRadius="{StaticResource RadiusXs}" BorderThickness="1"
+                                    BorderBrush="{StaticResource BorderStrongBrush}" />
+                            <Border x:Name="BoxHover" Opacity="0" CornerRadius="{StaticResource RadiusXs}" BorderThickness="1"
+                                    BorderBrush="{StaticResource TextSecondaryBrush}" />
+                            <Border x:Name="BoxFill" Opacity="0" CornerRadius="{StaticResource RadiusXs}"
+                                    Background="{StaticResource SelectionBgBrush}" />
+                            <Viewbox x:Name="Tick" Opacity="0" Width="10" Height="10">
+                                <Path Width="24" Height="24" Data="{StaticResource IconCheck}"
+                                      Stroke="{StaticResource SelectionFgBrush}" StrokeThickness="3.2"
+                                      StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round" />
+                            </Viewbox>
+                        </Grid>
+                        <ContentPresenter x:Name="Label" Opacity="0.68" Margin="8,0,0,0"
+                                          VerticalAlignment="Center" RecognizesAccessKey="True" />
+                    </StackPanel>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- =====================================================================
+         SCROLLBAR (örtük stil — tüm ScrollViewer'lara uygulanır)
+         ===================================================================== -->
+    <Style x:Key="ScrollBarPageButtonStyle" TargetType="RepeatButton">
+        <Setter Property="IsTabStop" Value="False" />
+        <Setter Property="Focusable" Value="False" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="RepeatButton">
+                    <Border Background="Transparent" />
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <Style x:Key="ScrollBarThumbStyle" TargetType="Thumb">
+        <Setter Property="IsTabStop" Value="False" />
+        <Setter Property="Focusable" Value="False" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Thumb">
+                    <Border x:Name="ThumbBorder" Margin="3" CornerRadius="2"
+                            Background="{StaticResource ScrollThumbBrush}" />
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="ThumbBorder" Property="Background" Value="{StaticResource ScrollThumbHoverBrush}" />
+                        </Trigger>
+                        <Trigger Property="IsDragging" Value="True">
+                            <Setter TargetName="ThumbBorder" Property="Background" Value="{StaticResource ScrollThumbHoverBrush}" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <ControlTemplate x:Key="VerticalScrollBarTemplate" TargetType="ScrollBar">
+        <Grid Background="Transparent">
+            <Track x:Name="PART_Track" IsDirectionReversed="True">
+                <Track.DecreaseRepeatButton>
+                    <RepeatButton Style="{StaticResource ScrollBarPageButtonStyle}" Command="ScrollBar.PageUpCommand" />
+                </Track.DecreaseRepeatButton>
+                <Track.IncreaseRepeatButton>
+                    <RepeatButton Style="{StaticResource ScrollBarPageButtonStyle}" Command="ScrollBar.PageDownCommand" />
+                </Track.IncreaseRepeatButton>
+                <Track.Thumb>
+                    <Thumb Style="{StaticResource ScrollBarThumbStyle}" MinHeight="32" />
+                </Track.Thumb>
+            </Track>
+        </Grid>
+    </ControlTemplate>
+
+    <ControlTemplate x:Key="HorizontalScrollBarTemplate" TargetType="ScrollBar">
+        <Grid Background="Transparent">
+            <Track x:Name="PART_Track" IsDirectionReversed="False">
+                <Track.DecreaseRepeatButton>
+                    <RepeatButton Style="{StaticResource ScrollBarPageButtonStyle}" Command="ScrollBar.PageLeftCommand" />
+                </Track.DecreaseRepeatButton>
+                <Track.IncreaseRepeatButton>
+                    <RepeatButton Style="{StaticResource ScrollBarPageButtonStyle}" Command="ScrollBar.PageRightCommand" />
+                </Track.IncreaseRepeatButton>
+                <Track.Thumb>
+                    <Thumb Style="{StaticResource ScrollBarThumbStyle}" MinWidth="32" />
+                </Track.Thumb>
+            </Track>
+        </Grid>
+    </ControlTemplate>
+
+    <Style x:Key="ThinScrollBarStyle" TargetType="ScrollBar">
+        <Setter Property="SnapsToDevicePixels" Value="True" />
+        <Setter Property="OverridesDefaultStyle" Value="True" />
+        <Setter Property="Stylus.IsFlicksEnabled" Value="False" />
+        <Setter Property="Width" Value="10" />
+        <Setter Property="MinWidth" Value="10" />
+        <Setter Property="Height" Value="Auto" />
+        <Setter Property="Template" Value="{StaticResource VerticalScrollBarTemplate}" />
+        <Style.Triggers>
+            <Trigger Property="Orientation" Value="Horizontal">
+                <Setter Property="Width" Value="Auto" />
+                <Setter Property="MinWidth" Value="0" />
+                <Setter Property="Height" Value="10" />
+                <Setter Property="MinHeight" Value="10" />
+                <Setter Property="Template" Value="{StaticResource HorizontalScrollBarTemplate}" />
+            </Trigger>
+        </Style.Triggers>
+    </Style>
+
+    <Style TargetType="ScrollBar" BasedOn="{StaticResource ThinScrollBarStyle}" />
+
+    <!-- =====================================================================
+         TOOLTIP (örtük stil)
+         ===================================================================== -->
+    <Style x:Key="SipoToolTipStyle" TargetType="ToolTip">
+        <Setter Property="OverridesDefaultStyle" Value="True" />
+        <Setter Property="HasDropShadow" Value="False" />
+        <Setter Property="Placement" Value="Bottom" />
+        <Setter Property="VerticalOffset" Value="6" />
+        <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}" />
+        <Setter Property="FontFamily" Value="{StaticResource FontSans}" />
+        <Setter Property="FontSize" Value="{StaticResource FontSizeCaption}" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ToolTip">
+                    <Border Background="{StaticResource SurfaceElevatedBrush}"
+                            BorderBrush="{StaticResource BorderBrush}" BorderThickness="1"
+                            CornerRadius="{StaticResource RadiusSm}"
+                            Padding="10,6" MaxWidth="280" SnapsToDevicePixels="True">
+                        <ContentPresenter>
+                            <ContentPresenter.Resources>
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="TextWrapping" Value="Wrap" />
+                                    <Setter Property="LineHeight" Value="{StaticResource LineHeightCaption}" />
+                                    <Setter Property="LineStackingStrategy" Value="BlockLineHeight" />
+                                </Style>
+                            </ContentPresenter.Resources>
+                        </ContentPresenter>
+                    </Border>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <Style TargetType="ToolTip" BasedOn="{StaticResource SipoToolTipStyle}" />
+
+    <!-- =====================================================================
+         AYIRICI ÇİZGİLER VE YÜZEYLER
+         ===================================================================== -->
+    <Style x:Key="DividerHorizontalStyle" TargetType="Rectangle">
+        <Setter Property="Height" Value="1" />
+        <Setter Property="HorizontalAlignment" Value="Stretch" />
+        <Setter Property="Fill" Value="{StaticResource BorderSubtleBrush}" />
+        <Setter Property="SnapsToDevicePixels" Value="True" />
+    </Style>
+
+    <Style x:Key="DividerVerticalStyle" TargetType="Rectangle">
+        <Setter Property="Width" Value="1" />
+        <Setter Property="VerticalAlignment" Value="Stretch" />
+        <Setter Property="Fill" Value="{StaticResource BorderSubtleBrush}" />
+        <Setter Property="SnapsToDevicePixels" Value="True" />
+    </Style>
+
+    <!-- Nadir kullanılan yüzey (hata bandı, ileride paneller). "Az sayıda kart" kuralı geçerli. -->
+    <Style x:Key="SurfaceCardStyle" TargetType="Border">
+        <Setter Property="Background" Value="{StaticResource SurfaceSecondaryBrush}" />
+        <Setter Property="BorderBrush" Value="{StaticResource BorderSubtleBrush}" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="CornerRadius" Value="{StaticResource RadiusLg}" />
+        <Setter Property="Padding" Value="{StaticResource CardPadding}" />
+        <Setter Property="SnapsToDevicePixels" Value="True" />
+    </Style>
+
+    <!-- =====================================================================
+         BOŞ DURUM ("henüz hazır değil")
+         Kullanım: <HeaderedContentControl Style="{StaticResource EmptyStateStyle}"
+                        Tag="{StaticResource IconProfiles}"
+                        Header="Henüz hazır değil"
+                        Content="Profil oluşturma ve düzenleme yakında burada." />
+         ===================================================================== -->
+    <Style x:Key="EmptyStateStyle" TargetType="HeaderedContentControl">
+        <Setter Property="Focusable" Value="False" />
+        <Setter Property="IsTabStop" Value="False" />
+        <Setter Property="HorizontalAlignment" Value="Center" />
+        <Setter Property="VerticalAlignment" Value="Center" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="HeaderedContentControl">
+                    <StackPanel MaxWidth="360">
+                        <Border Width="56" Height="56" HorizontalAlignment="Center"
+                                CornerRadius="{StaticResource RadiusXl}"
+                                Background="{StaticResource SurfaceSecondaryBrush}"
+                                BorderBrush="{StaticResource BorderSubtleBrush}" BorderThickness="1">
+                            <ContentControl Style="{StaticResource Icon24}" Content="{TemplateBinding Tag}"
+                                            Foreground="{StaticResource TextSecondaryBrush}" />
+                        </Border>
+                        <TextBlock Margin="0,20,0,0" HorizontalAlignment="Center" TextAlignment="Center"
+                                   Style="{StaticResource TextTitle3}"
+                                   Text="{Binding Header, RelativeSource={RelativeSource TemplatedParent}}" />
+                        <TextBlock Margin="0,6,0,0" HorizontalAlignment="Center" TextAlignment="Center"
+                                   Style="{StaticResource TextBodySecondary}"
+                                   TextWrapping="Wrap" TextTrimming="None"
+                                   Text="{Binding Content, RelativeSource={RelativeSource TemplatedParent}}" />
+                    </StackPanel>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- =====================================================================
+         SAYFA GEÇİŞİ (içerik alanı)
+         Kullanım: <ContentControl Style="{StaticResource PageHostStyle}"
+                        Content="{Binding CurrentPage, NotifyOnTargetUpdated=True}" />
+         Her içerik değişiminde: opaklık 0 → 1 ve 8 px aşağıdan yukarı, 220 ms, güçlü ease-out.
+         ===================================================================== -->
+    <Style x:Key="PageHostStyle" TargetType="ContentControl">
+        <Setter Property="Focusable" Value="False" />
+        <Setter Property="IsTabStop" Value="False" />
+        <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+        <Setter Property="VerticalContentAlignment" Value="Stretch" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ContentControl">
+                    <ContentPresenter x:Name="Presenter"
+                                      HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                      VerticalAlignment="{TemplateBinding VerticalContentAlignment}">
+                        <ContentPresenter.RenderTransform>
+                            <TranslateTransform Y="0" />
+                        </ContentPresenter.RenderTransform>
+                    </ContentPresenter>
+                    <ControlTemplate.Triggers>
+                        <EventTrigger RoutedEvent="Binding.TargetUpdated">
+                            <BeginStoryboard>
+                                <Storyboard>
+                                    <DoubleAnimation Storyboard.TargetName="Presenter" Storyboard.TargetProperty="Opacity"
+                                                     From="0" To="1"
+                                                     Duration="{StaticResource DurationMedium}"
+                                                     EasingFunction="{StaticResource EaseOutStrong}" />
+                                    <DoubleAnimation Storyboard.TargetName="Presenter"
+                                                     Storyboard.TargetProperty="(UIElement.RenderTransform).(TranslateTransform.Y)"
+                                                     From="{StaticResource MotionPageOffset}" To="0"
+                                                     Duration="{StaticResource DurationMedium}"
+                                                     EasingFunction="{StaticResource EaseOutStrong}" />
+                                </Storyboard>
+                            </BeginStoryboard>
+                        </EventTrigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+</ResourceDictionary>
