@@ -1,0 +1,6 @@
+interface:
+  display_name: "Dev Skill Reviewer"
+  short_description: "Reviews code, failures and dependencies."
+  default_prompt: "Use $dev-skill-reviewer to inspect the assigned scope and report evidence-backed findings."
+policy:
+  allow_implicit_invocation: false

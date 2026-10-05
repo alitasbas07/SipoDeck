@@ -1,0 +1,6 @@
+interface:
+  display_name: "Dev Skill Tester"
+  short_description: "Runs tests and reports reproducible evidence."
+  default_prompt: "Use $dev-skill-tester to test the assigned change and report exact evidence."
+policy:
+  allow_implicit_invocation: false

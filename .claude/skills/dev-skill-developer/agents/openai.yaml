@@ -1,0 +1,6 @@
+interface:
+  display_name: "Dev Skill Developer"
+  short_description: "Implements scoped changes without commit or merge."
+  default_prompt: "Use $dev-skill-developer to implement the assigned scoped change and report evidence."
+policy:
+  allow_implicit_invocation: false
