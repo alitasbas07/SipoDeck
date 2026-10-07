@@ -1,7 +1,9 @@
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Windows;
+using SipoDeck.Core.Actions;
 using SipoDeck.Runtime;
+using SipoDeck.Platform.Windows;
 using SipoDeck.ViewModels;
 
 namespace SipoDeck;
@@ -32,6 +34,8 @@ public partial class App
         ApplyWindowsStartup();
 
         SubscribeToRuntimeEvents();
+
+        ActionServices.Platform = new WindowsPlatformActions();
 
         try
         {

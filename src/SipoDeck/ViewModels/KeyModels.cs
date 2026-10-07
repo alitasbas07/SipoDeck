@@ -27,9 +27,11 @@ public sealed partial class KeyViewModel : ObservableObject
     [ObservableProperty]
     private bool _isFnKey;
 
-    public KeyViewModel(int key, KeyConfig? config, bool isFnKey)
+    public KeyViewModel(int key, KeyConfig? config, bool isFnKey, ActionCatalog catalog, Func<IReadOnlyList<ProfileOption>> profiles)
     {
         Key = key;
+        ActionEditor = new ActionEditorViewModel(catalog, profiles);
+        LongPressEditor = new ActionEditorViewModel(catalog, profiles);
         IsFnKey = isFnKey;
         Action = config?.Action;
         LongPressAction = config?.LongPressAction;
@@ -39,8 +41,8 @@ public sealed partial class KeyViewModel : ObservableObject
         LongPressEditor.Changed += (_, _) => LongPressAction = LongPressEditor.Config;
     }
 
-    public ActionEditorViewModel ActionEditor { get; } = new();
-    public ActionEditorViewModel LongPressEditor { get; } = new();
+    public ActionEditorViewModel ActionEditor { get; }
+    public ActionEditorViewModel LongPressEditor { get; }
 
     /// <summary>Atamayı (normal + uzun basma) verilen yapılandırmalarla değiştirir ve editörleri günceller.</summary>
     public void SetActions(ActionConfig? action, ActionConfig? longPress)
@@ -61,7 +63,7 @@ public sealed partial class CombinationViewModel : ObservableObject
     [ObservableProperty]
     private ActionConfig? _action;
 
-    public ActionEditorViewModel ActionEditor { get; } = new();
+    public ActionEditorViewModel ActionEditor { get; }
 
     public string KeysString
     {
@@ -84,8 +86,9 @@ public sealed partial class CombinationViewModel : ObservableObject
         }
     }
 
-    public CombinationViewModel(CombinationConfig config)
+    public CombinationViewModel(CombinationConfig config, ActionCatalog catalog, Func<IReadOnlyList<ProfileOption>> profiles)
     {
+        ActionEditor = new ActionEditorViewModel(catalog, profiles);
         foreach (var k in config.Keys) Keys.Add(k);
         Action = config.Action;
         ActionEditor.Load(Action);

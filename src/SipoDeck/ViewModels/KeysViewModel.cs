@@ -102,7 +102,7 @@ public sealed partial class KeysViewModel : ObservableObject, IUnsavedChangesGua
     private void AddCombination()
     {
         var combo = new CombinationConfig { Action = null };
-        var cvm = new CombinationViewModel(combo);
+        var cvm = new CombinationViewModel(combo, _runtime.GetActionCatalog(), GetProfileOptions);
         cvm.PropertyChanged += (s, e) => IsDirty = true;
         cvm.Keys.CollectionChanged += (s, e) => IsDirty = true;
         Combinations.Add(cvm);
@@ -162,7 +162,7 @@ public sealed partial class KeysViewModel : ObservableObject, IUnsavedChangesGua
         for (int i = 1; i <= keyCount; i++)
         {
             _profileData.Keys.TryGetValue(i, out var config);
-            var kvm = new KeyViewModel(i, config, i == fnKey);
+            var kvm = new KeyViewModel(i, config, i == fnKey, _runtime.GetActionCatalog(), GetProfileOptions);
             kvm.PropertyChanged += (s, e) => IsDirty = true;
             Keys.Add(kvm);
         }
@@ -171,12 +171,15 @@ public sealed partial class KeysViewModel : ObservableObject, IUnsavedChangesGua
         Combinations.Clear();
         foreach (var combo in _profileData.Combinations)
         {
-            var cvm = new CombinationViewModel(combo);
+            var cvm = new CombinationViewModel(combo, _runtime.GetActionCatalog(), GetProfileOptions);
             cvm.PropertyChanged += (s, e) => IsDirty = true;
             cvm.Keys.CollectionChanged += (s, e) => IsDirty = true;
             Combinations.Add(cvm);
         }
     }
+
+    private IReadOnlyList<ProfileOption> GetProfileOptions() =>
+        _runtime.GetProfilesSnapshot().Profiles.Select(p => new ProfileOption(p.Id, p.Name)).ToList();
 
     public async Task<bool> SaveAsync()
     {

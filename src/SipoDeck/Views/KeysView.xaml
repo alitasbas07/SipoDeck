@@ -4,34 +4,103 @@
              xmlns:vm="clr-namespace:SipoDeck.ViewModels"
              Focusable="False">
     <UserControl.Resources>
-        <!-- Tek bir eylemin tür + temel alan düzenleyicisi -->
+        <!-- Katalog tabanlı eylem editörü: tür seçimi, parametre formu ve zincir için makro adımları (iç içe kullanılır) -->
         <DataTemplate DataType="{x:Type vm:ActionEditorViewModel}">
             <StackPanel>
-                <ComboBox Style="{StaticResource InputComboBoxStyle}" ItemsSource="{Binding TypeOptions}" SelectedItem="{Binding SelectedType}" />
-                <StackPanel Margin="0,8,0,0" Visibility="{Binding IsProgram, Converter={StaticResource BooleanToVisibilityConverter}}">
-                    <TextBlock Text="Program yolu" Style="{StaticResource TextBodySmall}" />
-                    <TextBox Style="{StaticResource InputTextBoxStyle}" Text="{Binding Text1, UpdateSourceTrigger=PropertyChanged}" />
-                    <TextBlock Text="Argümanlar" Style="{StaticResource TextBodySmall}" Margin="0,6,0,0" />
-                    <TextBox Style="{StaticResource InputTextBoxStyle}" Text="{Binding Text2, UpdateSourceTrigger=PropertyChanged}" />
-                    <TextBlock Text="Çalışma klasörü" Style="{StaticResource TextBodySmall}" Margin="0,6,0,0" />
-                    <TextBox Style="{StaticResource InputTextBoxStyle}" Text="{Binding Text3, UpdateSourceTrigger=PropertyChanged}" />
+                <ComboBox Style="{StaticResource InputComboBoxStyle}" ItemsSource="{Binding TypeOptions}" SelectedItem="{Binding SelectedType}" DisplayMemberPath="Display" />
+
+                <Border Margin="0,8,0,0" Padding="10,8" CornerRadius="4" BorderThickness="1"
+                        BorderBrush="{StaticResource BorderStrongBrush}" Background="{StaticResource SurfaceElevatedBrush}"
+                        Visibility="{Binding Warning, Converter={StaticResource NullToVisibilityConverter}}">
+                    <TextBlock Text="{Binding Warning}" Style="{StaticResource TextBodySmallStrong}" TextWrapping="Wrap" />
+                </Border>
+
+                <ItemsControl ItemsSource="{Binding Parameters}" Focusable="False">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <StackPanel Margin="0,8,0,0">
+                                <TextBlock Text="{Binding Label}" Style="{StaticResource TextBodySmall}" />
+                                <TextBox Style="{StaticResource InputTextBoxStyle}" Text="{Binding TextValue, UpdateSourceTrigger=PropertyChanged}"
+                                         Visibility="{Binding IsPlainText, Converter={StaticResource BooleanToVisibilityConverter}}" />
+                                <TextBox Style="{StaticResource InputTextBoxStyle}" Text="{Binding TextValue, UpdateSourceTrigger=PropertyChanged}"
+                                         Height="80" AcceptsReturn="True" TextWrapping="Wrap" VerticalContentAlignment="Top" Padding="12,8"
+                                         VerticalScrollBarVisibility="Auto"
+                                         Visibility="{Binding IsLongText, Converter={StaticResource BooleanToVisibilityConverter}}" />
+                                <Grid Visibility="{Binding IsFilePath, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <TextBox Style="{StaticResource InputTextBoxStyle}" Text="{Binding TextValue, UpdateSourceTrigger=PropertyChanged}" />
+                                    <Button Grid.Column="1" Style="{StaticResource SecondaryButtonStyle}" Content="Gözat" Margin="6,0,0,0"
+                                            Command="{Binding BrowseFileCommand}"
+                                            Visibility="{Binding CanBrowseFile, Converter={StaticResource BooleanToVisibilityConverter}}" />
+                                    <Button Grid.Column="2" Style="{StaticResource SecondaryButtonStyle}" Content="Klasör" Margin="6,0,0,0"
+                                            Command="{Binding BrowseFolderCommand}"
+                                            Visibility="{Binding CanBrowseFolder, Converter={StaticResource BooleanToVisibilityConverter}}" />
+                                </Grid>
+                                <ComboBox Style="{StaticResource InputComboBoxStyle}" ItemsSource="{Binding Choices}" SelectedItem="{Binding SelectedChoice}" DisplayMemberPath="Label"
+                                          Visibility="{Binding IsChoice, Converter={StaticResource BooleanToVisibilityConverter}}" />
+                                <ComboBox Style="{StaticResource InputComboBoxStyle}" ItemsSource="{Binding Profiles}" SelectedItem="{Binding SelectedProfile}" DisplayMemberPath="Name"
+                                          Visibility="{Binding IsProfile, Converter={StaticResource BooleanToVisibilityConverter}}" />
+                                <TextBlock Text="{Binding Error}" Foreground="#E5484D" Style="{StaticResource TextCaption}" TextWrapping="Wrap" Margin="0,2,0,0"
+                                           Visibility="{Binding Error, Converter={StaticResource NullToVisibilityConverter}}" />
+                            </StackPanel>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+
+                <TextBlock Text="{Binding ValidationSummary}" Foreground="#E5484D" Style="{StaticResource TextCaption}" TextWrapping="Wrap" Margin="0,6,0,0"
+                           Visibility="{Binding ValidationSummary, Converter={StaticResource NullToVisibilityConverter}}" />
+
+                <!-- Makro düzenleyici (yalnızca zincir türü) -->
+                <StackPanel Margin="0,10,0,0" Visibility="{Binding IsChain, Converter={StaticResource BooleanToVisibilityConverter}}">
+                    <TextBlock Text="Makro adımları" Style="{StaticResource TextBodyStrong}" />
+                    <TextBlock Text="{Binding ChainSummary}" Style="{StaticResource TextCaptionMuted}" Margin="0,2,0,0" TextWrapping="Wrap" />
+                    <TextBlock Text="{Binding StepLimitMessage}" Foreground="#E5484D" Style="{StaticResource TextCaption}" TextWrapping="Wrap" Margin="0,4,0,0"
+                               Visibility="{Binding StepLimitMessage, Converter={StaticResource NullToVisibilityConverter}}" />
+
+                    <ItemsControl ItemsSource="{Binding Steps}" Focusable="False" Margin="0,6,0,0">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Border BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="4" Margin="0,0,0,6" Padding="8">
+                                    <StackPanel>
+                                        <Grid Margin="0,0,0,6">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="Auto" />
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Text="{Binding StepTitle}" Style="{StaticResource TextBodySmallStrong}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
+                                            <StackPanel Grid.Column="1" Orientation="Horizontal">
+                                                <Button Style="{StaticResource SecondaryButtonStyle}" Content="↑" ToolTip="Yukarı taşı" Margin="0,0,4,0"
+                                                        Command="{Binding DataContext.MoveStepUpCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}" CommandParameter="{Binding}" />
+                                                <Button Style="{StaticResource SecondaryButtonStyle}" Content="↓" ToolTip="Aşağı taşı" Margin="0,0,4,0"
+                                                        Command="{Binding DataContext.MoveStepDownCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}" CommandParameter="{Binding}" />
+                                                <Button Style="{StaticResource SecondaryButtonStyle}" Content="Kopyala" Margin="0,0,4,0"
+                                                        Command="{Binding DataContext.DuplicateStepCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}" CommandParameter="{Binding}" />
+                                                <Button Style="{StaticResource SecondaryButtonStyle}" Content="Sil"
+                                                        Command="{Binding DataContext.RemoveStepCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}" CommandParameter="{Binding}" />
+                                            </StackPanel>
+                                        </Grid>
+                                        <ContentControl Content="{Binding}" Focusable="False" />
+                                    </StackPanel>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+
+                    <Grid Margin="0,4,0,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <ComboBox Style="{StaticResource InputComboBoxStyle}" ItemsSource="{Binding StepTypeOptions}" SelectedItem="{Binding NewStepType}" DisplayMemberPath="Display" />
+                        <Button Grid.Column="1" Style="{StaticResource SecondaryButtonStyle}" Content="Adım ekle" Margin="6,0,0,0" Command="{Binding AddStepCommand}" />
+                        <Button Grid.Column="2" Style="{StaticResource SecondaryButtonStyle}" Content="Bekleme ekle" Margin="6,0,0,0" Command="{Binding AddWaitCommand}" />
+                    </Grid>
                 </StackPanel>
-                <StackPanel Margin="0,8,0,0" Visibility="{Binding IsUrl, Converter={StaticResource BooleanToVisibilityConverter}}">
-                    <TextBlock Text="Adres" Style="{StaticResource TextBodySmall}" />
-                    <TextBox Style="{StaticResource InputTextBoxStyle}" Text="{Binding Text1, UpdateSourceTrigger=PropertyChanged}" />
-                </StackPanel>
-                <StackPanel Margin="0,8,0,0" Visibility="{Binding IsNotification, Converter={StaticResource BooleanToVisibilityConverter}}">
-                    <TextBlock Text="Başlık" Style="{StaticResource TextBodySmall}" />
-                    <TextBox Style="{StaticResource InputTextBoxStyle}" Text="{Binding Text1, UpdateSourceTrigger=PropertyChanged}" />
-                    <TextBlock Text="Mesaj" Style="{StaticResource TextBodySmall}" Margin="0,6,0,0" />
-                    <TextBox Style="{StaticResource InputTextBoxStyle}" Text="{Binding Text2, UpdateSourceTrigger=PropertyChanged}" />
-                </StackPanel>
-                <ComboBox Style="{StaticResource InputComboBoxStyle}" Margin="0,8,0,0" ItemsSource="{Binding VolumeCommands}" SelectedItem="{Binding VolumeCommand}"
-                          Visibility="{Binding IsVolume, Converter={StaticResource BooleanToVisibilityConverter}}" />
-                <ComboBox Style="{StaticResource InputComboBoxStyle}" Margin="0,8,0,0" ItemsSource="{Binding MediaCommands}" SelectedItem="{Binding MediaCommand}"
-                          Visibility="{Binding IsMedia, Converter={StaticResource BooleanToVisibilityConverter}}" />
-                <TextBlock Margin="0,8,0,0" Text="{Binding ChainSummary}" Style="{StaticResource TextCaptionMuted}"
-                           Visibility="{Binding IsChain, Converter={StaticResource BooleanToVisibilityConverter}}" />
             </StackPanel>
         </DataTemplate>
     </UserControl.Resources>

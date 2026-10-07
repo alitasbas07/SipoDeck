@@ -12,6 +12,7 @@
   <ItemGroup>
     <ProjectReference Include="..\SipoDeck.Core\SipoDeck.Core.csproj" />
     <ProjectReference Include="..\SipoDeck.Runtime\SipoDeck.Runtime.csproj" />
+    <ProjectReference Include="..\SipoDeck.Platform.Windows\SipoDeck.Platform.Windows.csproj" />
   </ItemGroup>
 
   <ItemGroup>
