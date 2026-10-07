@@ -16,7 +16,7 @@ public enum MediaCommand
 
 /// <summary>
 /// Bir medya kontrolü eyleminin temel yapısıdır.
-/// Gerçek medya kontrolü ileriki bir task'ta / Windows katmanında uygulanacaktır.
+/// Gerçek davranış <see cref="ActionServices.Platform"/> üzerinden platform katmanında uygulanır.
 /// </summary>
 public sealed class MediaAction : IAction
 {
@@ -25,8 +25,5 @@ public sealed class MediaAction : IAction
     public MediaCommand Command { get; }
 
     public Task ExecuteAsync(CancellationToken cancellationToken = default)
-    {
-        // Temel yapı: gerçek medya kontrolü henüz uygulanmadı.
-        return Task.CompletedTask;
-    }
+        => ActionServices.Platform.SendMediaAsync(Command, cancellationToken);
 }

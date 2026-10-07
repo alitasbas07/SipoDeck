@@ -1,3 +1,4 @@
+using SipoDeck.Core.Actions;
 using System.IO.Ports;
 using SipoDeck.Core.Profiles;
 using SipoDeck.Core.Settings;
@@ -30,6 +31,23 @@ public sealed partial class AppRuntime
     }
 
     /// <summary>Güncel profillerin bağımsız kopyası; <see cref="ProfilesData.ActiveProfileId"/> çalışan sistemdeki aktif profili yansıtır.</summary>
+    /// <summary>Yerleşik eylem türlerinin kataloğu (eylem seçici ve parametre formları için).</summary>
+    public ActionCatalog GetActionCatalog() => ActionCatalog.Default;
+
+    private sealed class RuntimeProfileSwitcher : IProfileSwitcher
+    {
+        private readonly AppRuntime _runtime;
+
+        public RuntimeProfileSwitcher(AppRuntime runtime) => _runtime = runtime;
+
+        public async Task SwitchProfileAsync(string profileId, CancellationToken cancellationToken = default)
+        {
+            var result = await _runtime.SetActiveProfileAsync(profileId, cancellationToken).ConfigureAwait(false);
+            if (!result.IsSuccess)
+                throw new InvalidOperationException(result.FailureMessage ?? result.Errors.FirstOrDefault()?.Message ?? "Profil değiştirilemedi.");
+        }
+    }
+
     public ProfilesData GetProfilesSnapshot()
     {
         EnsureLoaded();

@@ -41,6 +41,7 @@ public sealed partial class AppRuntime
     private ConnectionType _connectionType;
 
     private ActionQueue? _actionQueue;
+    private readonly RuntimeProfileSwitcher _profileSwitcher;
     private InputEngine? _inputEngine; // Volatile.Read/Interlocked ile erişilir.
     private ITransport? _transport;
     private DeviceConnection? _deviceConnection;
@@ -58,6 +59,7 @@ public sealed partial class AppRuntime
     {
         _settingsFilePath = settingsFilePath;
         _profilesFilePath = profilesFilePath;
+        _profileSwitcher = new RuntimeProfileSwitcher(this);
         _profiles.ActiveProfileChanged += OnProfileManagerActiveProfileChanged;
     }
 
@@ -111,6 +113,7 @@ public sealed partial class AppRuntime
 
                 _actionQueue = new ActionQueue();
                 _actionQueue.ActionFailed += OnActionFailed;
+                ActionServices.ProfileSwitcher = _profileSwitcher;
 
                 Interlocked.Exchange(ref _inputEngine, CreateInputEngine(settings.Input));
 
@@ -313,6 +316,9 @@ public sealed partial class AppRuntime
         await DisposeConnectionAsync().ConfigureAwait(false);
 
         Interlocked.Exchange(ref _inputEngine, null)?.Dispose();
+
+        if (ReferenceEquals(ActionServices.ProfileSwitcher, _profileSwitcher))
+            ActionServices.ProfileSwitcher = null;
 
         if (_actionQueue is not null)
         {

@@ -15,7 +15,7 @@ public enum VolumeCommand
 
 /// <summary>
 /// Bir ses kontrolü eyleminin temel yapısıdır.
-/// Gerçek ses kontrolü ileriki bir task'ta / Windows katmanında uygulanacaktır.
+/// Gerçek davranış <see cref="ActionServices.Platform"/> üzerinden platform katmanında uygulanır.
 /// </summary>
 public sealed class VolumeAction : IAction
 {
@@ -24,8 +24,5 @@ public sealed class VolumeAction : IAction
     public VolumeCommand Command { get; }
 
     public Task ExecuteAsync(CancellationToken cancellationToken = default)
-    {
-        // Temel yapı: gerçek ses kontrolü henüz uygulanmadı.
-        return Task.CompletedTask;
-    }
+        => ActionServices.Platform.SetVolumeAsync(Command, cancellationToken);
 }

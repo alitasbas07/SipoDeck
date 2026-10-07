@@ -5,7 +5,7 @@ namespace SipoDeck.Core.Actions;
 
 /// <summary>
 /// Bir bildirim gösterme eyleminin temel yapısıdır.
-/// Gerçek işletim sistemi bildirimi (toast) ileriki bir task'ta / Windows katmanında uygulanacaktır.
+/// Gerçek bildirim <see cref="ActionServices.Platform"/> üzerinden platform katmanında gösterilir.
 /// </summary>
 public sealed class NotificationAction : IAction
 {
@@ -20,8 +20,5 @@ public sealed class NotificationAction : IAction
     public string Message { get; }
 
     public Task ExecuteAsync(CancellationToken cancellationToken = default)
-    {
-        // Temel yapı: gerçek bildirim gösterimi henüz uygulanmadı.
-        return Task.CompletedTask;
-    }
+        => ActionServices.Platform.ShowNotificationAsync(Title, Message, cancellationToken);
 }

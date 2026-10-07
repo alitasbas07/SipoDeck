@@ -64,40 +64,51 @@ public static class ProfilesValidator
         return ValidationResult.Failure(errors);
     }
 
-    // Eylem boşsa (atanmamış) geçerlidir; dolu ise türüne göre alanları denetlenir.
+    // Eylem boşsa (atanmamış) geçerlidir; dolu ise katalog tanımına göre alanları denetlenir.
+    // Zincirler için adım sınırı, iç içe derinlik ve döngü denetlenir.
     private static void ValidateAction(ActionConfig? action, string path, List<ValidationError> errors)
     {
-        switch (action)
+        if (action is null)
+            return;
+
+        var totalSteps = 0;
+        ValidateAction(action, path, errors, new List<ActionConfig>(), ref totalSteps);
+
+        if (totalSteps > ActionCatalog.MaxChainSteps)
+            errors.Add(new(path, $"Zincirler toplamda en fazla {ActionCatalog.MaxChainSteps} adım içerebilir."));
+    }
+
+    private static void ValidateAction(ActionConfig action, string path, List<ValidationError> errors,
+        List<ActionConfig> ancestors, ref int totalSteps)
+    {
+        totalSteps++;
+
+        foreach (var (property, message) in ActionCatalog.Default.ValidateParameters(action))
+            errors.Add(new(string.IsNullOrEmpty(property) ? path : $"{path}.{property}", message));
+
+        if (action is not ActionChainConfig chain)
+            return;
+
+        if (ancestors.Any(a => ReferenceEquals(a, chain)))
         {
-            case null:
-                break;
-            case RunProgramActionConfig run when string.IsNullOrWhiteSpace(run.FilePath):
-                errors.Add(new($"{path}.FilePath", "Program yolu boş olamaz."));
-                break;
-            case OpenUrlActionConfig url when string.IsNullOrWhiteSpace(url.Url):
-                errors.Add(new($"{path}.Url", "Adres boş olamaz."));
-                break;
-            case WaitActionConfig wait when wait.Milliseconds < 0:
-                errors.Add(new($"{path}.Milliseconds", "Bekleme süresi negatif olamaz."));
-                break;
-            case NotificationActionConfig n when string.IsNullOrWhiteSpace(n.Title) && string.IsNullOrWhiteSpace(n.Message):
-                errors.Add(new($"{path}.Message", "Bildirim başlığı veya mesajı girilmelidir."));
-                break;
-            case VolumeActionConfig v when !Enum.IsDefined(v.Command):
-                errors.Add(new($"{path}.Command", "Geçersiz ses komutu."));
-                break;
-            case MediaActionConfig m when !Enum.IsDefined(m.Command):
-                errors.Add(new($"{path}.Command", "Geçersiz medya komutu."));
-                break;
-            case ActionChainConfig chain:
-                for (var i = 0; i < chain.Actions.Count; i++)
-                {
-                    if (chain.Actions[i] is null)
-                        errors.Add(new($"{path}.Actions[{i}]", "Zincirdeki eylem boş olamaz."));
-                    else
-                        ValidateAction(chain.Actions[i], $"{path}.Actions[{i}]", errors);
-                }
-                break;
+            errors.Add(new(path, "Zincir kendisini içeremez (döngü)."));
+            return;
         }
+
+        if (ancestors.Count + 1 > ActionCatalog.MaxChainDepth)
+        {
+            errors.Add(new(path, $"Zincirler en fazla {ActionCatalog.MaxChainDepth} seviye iç içe olabilir."));
+            return;
+        }
+
+        ancestors.Add(chain);
+        for (var i = 0; i < chain.Actions.Count; i++)
+        {
+            if (chain.Actions[i] is null)
+                errors.Add(new($"{path}.Actions[{i}]", "Zincirdeki eylem boş olamaz."));
+            else
+                ValidateAction(chain.Actions[i], $"{path}.Actions[{i}]", errors, ancestors, ref totalSteps);
+        }
+        ancestors.RemoveAt(ancestors.Count - 1);
     }
 }

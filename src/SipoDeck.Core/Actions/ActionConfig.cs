@@ -14,6 +14,10 @@ namespace SipoDeck.Core.Actions;
 [JsonDerivedType(typeof(NotificationActionConfig), "notification")]
 [JsonDerivedType(typeof(VolumeActionConfig), "volume")]
 [JsonDerivedType(typeof(MediaActionConfig), "media")]
+[JsonDerivedType(typeof(KeyboardShortcutActionConfig), "keyboardShortcut")]
+[JsonDerivedType(typeof(TypeTextActionConfig), "typeText")]
+[JsonDerivedType(typeof(OpenPathActionConfig), "openPath")]
+[JsonDerivedType(typeof(SwitchProfileActionConfig), "switchProfile")]
 [JsonDerivedType(typeof(ActionChainConfig), "chain")]
 public abstract class ActionConfig
 {
@@ -70,4 +74,32 @@ public sealed class ActionChainConfig : ActionConfig
     public List<ActionConfig> Actions { get; set; } = new();
 
     public override IAction ToAction() => new ActionChain(Actions.Select(a => a.ToAction()));
+}
+
+public sealed class KeyboardShortcutActionConfig : ActionConfig
+{
+    public string Shortcut { get; set; } = string.Empty;
+
+    public override IAction ToAction() => new KeyboardShortcutAction(Shortcut);
+}
+
+public sealed class TypeTextActionConfig : ActionConfig
+{
+    public string Text { get; set; } = string.Empty;
+
+    public override IAction ToAction() => new TypeTextAction(Text);
+}
+
+public sealed class OpenPathActionConfig : ActionConfig
+{
+    public string Path { get; set; } = string.Empty;
+
+    public override IAction ToAction() => new OpenPathAction(Path);
+}
+
+public sealed class SwitchProfileActionConfig : ActionConfig
+{
+    public string ProfileId { get; set; } = string.Empty;
+
+    public override IAction ToAction() => new SwitchProfileAction(ProfileId);
 }
