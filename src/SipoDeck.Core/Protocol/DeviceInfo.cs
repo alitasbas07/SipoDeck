@@ -18,4 +18,13 @@ public sealed class DeviceInfo
 
     [JsonPropertyName("protocol_version")]
     public int ProtocolVersion { get; set; }
+
+    [JsonPropertyName("key_count")]
+    public int KeyCount { get; set; }
+
+    [JsonPropertyName("rows")]
+    public int? Rows { get; set; }
+
+    [JsonPropertyName("cols")]
+    public int? Cols { get; set; }
 }

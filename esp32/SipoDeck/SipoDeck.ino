@@ -29,7 +29,17 @@ String helloJson() {
   json += PROTOCOL_VERSION;
   json += ",\"type\":\"hello\",\"device_id\":\"" DEVICE_ID "\",\"device_name\":\"" DEVICE_NAME "\",\"firmware_version\":\"";
   json += FIRMWARE_VERSION;
-  json += "\",\"protocol_version\":";
+  json += "\",\"key_count\":";
+  json += BUTTON_COUNT;
+  #ifdef LAYOUT_ROWS
+  json += ",\"rows\":";
+  json += LAYOUT_ROWS;
+  #endif
+  #ifdef LAYOUT_COLS
+  json += ",\"cols\":";
+  json += LAYOUT_COLS;
+  #endif
+  json += ",\"protocol_version\":";
   json += PROTOCOL_VERSION;
   json += ",\"timestamp\":";
   json += millis();

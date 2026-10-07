@@ -47,6 +47,33 @@ public class ProtocolSerializerTests
     }
 
     [Fact]
+    public void TryDeserialize_HelloWithKeyLayout_ExposesKeyCountRowsCols()
+    {
+        var ok = ProtocolSerializer.TryDeserialize(
+            "{\"type\":\"hello\",\"version\":1,\"device_id\":\"d1\",\"device_name\":\"Deck\",\"firmware_version\":\"1.2\",\"key_count\":4,\"rows\":2,\"cols\":2,\"protocol_version\":1}",
+            out var message, out _);
+
+        Assert.True(ok);
+        var info = Assert.IsType<HelloMessage>(message).ToDeviceInfo();
+        Assert.Equal(4, info.KeyCount);
+        Assert.Equal(2, info.Rows);
+        Assert.Equal(2, info.Cols);
+    }
+
+    [Fact]
+    public void TryDeserialize_HelloWithoutKeyLayout_DefaultsToUnknown()
+    {
+        ProtocolSerializer.TryDeserialize(
+            "{\"type\":\"hello\",\"version\":1,\"device_id\":\"d1\",\"device_name\":\"Deck\",\"firmware_version\":\"1.2\",\"protocol_version\":1}",
+            out var message, out _);
+
+        var info = Assert.IsType<HelloMessage>(message).ToDeviceInfo();
+        Assert.Equal(0, info.KeyCount);
+        Assert.Null(info.Rows);
+        Assert.Null(info.Cols);
+    }
+
+    [Fact]
     public void TryDeserialize_OutOfOrderTypeProperty_IsAccepted()
     {
         var ok = ProtocolSerializer.TryDeserialize(

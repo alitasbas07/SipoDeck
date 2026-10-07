@@ -21,3 +21,7 @@
 // Tuş pinleri. Sıra tuş numarasını belirler: ilk pin = tuş 1, ikinci pin = tuş 2 ...
 // Tuşlar pin ile GND arasına bağlanır (dahili pull-up kullanılır).
 static const int BUTTON_PINS[] = { 13, 12, 14, 27 };
+
+// Gorsel arayuzdeki yerlesim: SipoDeck.Core tarafindan izgara cizilirken kullanilir.
+#define LAYOUT_ROWS 2
+#define LAYOUT_COLS 2

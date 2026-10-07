@@ -28,7 +28,6 @@ public sealed class AppRuntimeTests : IDisposable
         Assert.Equal(RuntimeState.Stopped, runtime.State);
         Assert.Equal(ConnectionState.Disconnected, runtime.DeviceConnectionState);
     }
-
     [Fact]
     public async Task Start_WithoutConnectionSettings_RunsAndDeviceStaysDisconnected()
     {

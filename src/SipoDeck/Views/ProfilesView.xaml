@@ -242,10 +242,7 @@
                         <!-- Tuş atamaları (Task 018) -->
                         <TextBlock Style="{StaticResource TextBodyStrong}" Text="Tuş atamaları" Margin="0,0,0,4" />
                         <TextBlock Style="{StaticResource TextBodySecondary}" Text="{Binding AssignmentSummary}" />
-                        <Button Style="{StaticResource SecondaryButtonStyle}" Content="Tuş atamalarını düzenle"
-                                HorizontalAlignment="Left" Margin="0,12,0,0" IsEnabled="False"
-                                ToolTip="Yakında" ToolTipService.ShowOnDisabled="True" />
-                        <TextBlock Style="{StaticResource HintStyle}" Margin="0,8,0,0" Text="Yakında." />
+                        <Button Style="{StaticResource SecondaryButtonStyle}" Content="Tuş atamalarını düzenle" HorizontalAlignment="Left" Margin="0,12,0,0" Command="{Binding EditKeysCommand}" />
                     </StackPanel>
                 </ScrollViewer>
             </Grid>

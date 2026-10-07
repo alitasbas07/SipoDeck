@@ -28,12 +28,13 @@ public sealed class ShellViewModel : ObservableObject, IDisposable
     {
         Status = new StatusViewModel(runtime, dispatcher);
         Settings = new SettingsViewModel(runtime, dispatcher, Status);
-        Profiles = new ProfilesViewModel(runtime, dispatcher);
+        Keys = new KeysViewModel(runtime, dispatcher);
+        Profiles = new ProfilesViewModel(runtime, dispatcher, id => { Keys.LoadProfile(id); Navigate(DeckPageKey); });
 
         var items = new List<NavigationItemViewModel>
         {
             Add(HomePageKey, "Ana Sayfa", "IconHome", new HomeViewModel(Status, Navigate)),
-            Add(DeckPageKey, "Deck", "IconDeck", new PlaceholderPageViewModel("Deck", "Tuşlara eylem atama yakında burada.")),
+            Add(DeckPageKey, "Deck", "IconDeck", Keys),
             Add(ProfilesPageKey, "Profiller", "IconProfiles", Profiles),
             Add(ActionsPageKey, "Eylemler", "IconActions", new PlaceholderPageViewModel("Eylemler", "Eylem kitaplığı yakında burada.")),
             Add(DevicesPageKey, "Cihazlar", "IconDevices", new PlaceholderPageViewModel("Cihazlar", "Cihaz eşleştirme ve yönetimi yakında burada.")),
@@ -60,6 +61,7 @@ public sealed class ShellViewModel : ObservableObject, IDisposable
     public StatusViewModel Status { get; }
 
     public SettingsViewModel Settings { get; }
+    public KeysViewModel Keys { get; }
 
     public ProfilesViewModel Profiles { get; }
 

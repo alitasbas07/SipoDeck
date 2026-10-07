@@ -1,0 +1,137 @@
+<UserControl x:Class="SipoDeck.Views.KeysView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="clr-namespace:SipoDeck.ViewModels"
+             Focusable="False">
+    <UserControl.Resources>
+        <!-- Tek bir eylemin tür + temel alan düzenleyicisi -->
+        <DataTemplate DataType="{x:Type vm:ActionEditorViewModel}">
+            <StackPanel>
+                <ComboBox Style="{StaticResource InputComboBoxStyle}" ItemsSource="{Binding TypeOptions}" SelectedItem="{Binding SelectedType}" />
+                <StackPanel Margin="0,8,0,0" Visibility="{Binding IsProgram, Converter={StaticResource BooleanToVisibilityConverter}}">
+                    <TextBlock Text="Program yolu" Style="{StaticResource TextBodySmall}" />
+                    <TextBox Style="{StaticResource InputTextBoxStyle}" Text="{Binding Text1, UpdateSourceTrigger=PropertyChanged}" />
+                    <TextBlock Text="Argümanlar" Style="{StaticResource TextBodySmall}" Margin="0,6,0,0" />
+                    <TextBox Style="{StaticResource InputTextBoxStyle}" Text="{Binding Text2, UpdateSourceTrigger=PropertyChanged}" />
+                    <TextBlock Text="Çalışma klasörü" Style="{StaticResource TextBodySmall}" Margin="0,6,0,0" />
+                    <TextBox Style="{StaticResource InputTextBoxStyle}" Text="{Binding Text3, UpdateSourceTrigger=PropertyChanged}" />
+                </StackPanel>
+                <StackPanel Margin="0,8,0,0" Visibility="{Binding IsUrl, Converter={StaticResource BooleanToVisibilityConverter}}">
+                    <TextBlock Text="Adres" Style="{StaticResource TextBodySmall}" />
+                    <TextBox Style="{StaticResource InputTextBoxStyle}" Text="{Binding Text1, UpdateSourceTrigger=PropertyChanged}" />
+                </StackPanel>
+                <StackPanel Margin="0,8,0,0" Visibility="{Binding IsNotification, Converter={StaticResource BooleanToVisibilityConverter}}">
+                    <TextBlock Text="Başlık" Style="{StaticResource TextBodySmall}" />
+                    <TextBox Style="{StaticResource InputTextBoxStyle}" Text="{Binding Text1, UpdateSourceTrigger=PropertyChanged}" />
+                    <TextBlock Text="Mesaj" Style="{StaticResource TextBodySmall}" Margin="0,6,0,0" />
+                    <TextBox Style="{StaticResource InputTextBoxStyle}" Text="{Binding Text2, UpdateSourceTrigger=PropertyChanged}" />
+                </StackPanel>
+                <ComboBox Style="{StaticResource InputComboBoxStyle}" Margin="0,8,0,0" ItemsSource="{Binding VolumeCommands}" SelectedItem="{Binding VolumeCommand}"
+                          Visibility="{Binding IsVolume, Converter={StaticResource BooleanToVisibilityConverter}}" />
+                <ComboBox Style="{StaticResource InputComboBoxStyle}" Margin="0,8,0,0" ItemsSource="{Binding MediaCommands}" SelectedItem="{Binding MediaCommand}"
+                          Visibility="{Binding IsMedia, Converter={StaticResource BooleanToVisibilityConverter}}" />
+                <TextBlock Margin="0,8,0,0" Text="{Binding ChainSummary}" Style="{StaticResource TextCaptionMuted}"
+                           Visibility="{Binding IsChain, Converter={StaticResource BooleanToVisibilityConverter}}" />
+            </StackPanel>
+        </DataTemplate>
+    </UserControl.Resources>
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <TextBlock Text="Tuş Düzeni ve Atama" Style="{StaticResource TextTitle3}" Margin="0,0,0,12" />
+
+        <Grid Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="340" />
+            </Grid.ColumnDefinitions>
+
+            <ScrollViewer Grid.Column="0" VerticalScrollBarVisibility="Auto" Margin="0,0,16,0">
+                <StackPanel>
+                    <TextBlock Text="Cihaz Tuşları" Style="{StaticResource TextBodyStrong}" Margin="0,0,0,8" />
+                    <TextBlock Text="Tuş bilgisi için cihazın bağlanması gerekir." Style="{StaticResource TextCaptionMuted}" Margin="0,0,0,8"
+                               Visibility="{Binding HasNoKeys, Converter={StaticResource BooleanToVisibilityConverter}}" />
+
+                    <ItemsControl ItemsSource="{Binding Keys}">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <UniformGrid Columns="{Binding DataContext.GridCols, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                             Rows="{Binding DataContext.GridRows, RelativeSource={RelativeSource AncestorType=UserControl}}" />
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Border BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="4" Margin="4" Padding="8">
+                                    <StackPanel>
+                                        <TextBlock Text="{Binding Label}" Style="{StaticResource TextBodyStrong}" />
+                                        <TextBlock Text="FN tuşu" Visibility="{Binding IsFnKey, Converter={StaticResource BooleanToVisibilityConverter}}" Style="{StaticResource TextCaptionMuted}" />
+                                        <TextBlock Text="Normal eylem var" Visibility="{Binding Action, Converter={StaticResource NullToVisibilityConverter}}" Style="{StaticResource TextCaptionMuted}" />
+                                        <TextBlock Text="Uzun basma var" Visibility="{Binding LongPressAction, Converter={StaticResource NullToVisibilityConverter}}" Style="{StaticResource TextCaptionMuted}" />
+                                        <Button Style="{StaticResource SecondaryButtonStyle}" Content="Seç" Margin="0,6,0,0"
+                                                Command="{Binding DataContext.SelectKeyCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding}" />
+                                    </StackPanel>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+
+                    <Button Style="{StaticResource SecondaryButtonStyle}" Content="{Binding InterceptionButtonText}" Command="{Binding ToggleInterceptionCommand}" Margin="0,16,0,0" HorizontalAlignment="Left" />
+
+                    <TextBlock Text="Kombinasyonlar" Style="{StaticResource TextBodyStrong}" Margin="0,24,0,8" />
+                    <ItemsControl ItemsSource="{Binding Combinations}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Border BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="4" Margin="0,0,0,8" Padding="8">
+                                    <StackPanel>
+                                        <TextBlock Text="Tuşlar (virgülle ayırın, en az 2)" Style="{StaticResource TextBodySmall}" />
+                                        <TextBox Style="{StaticResource InputTextBoxStyle}" Text="{Binding KeysString, UpdateSourceTrigger=LostFocus}" Margin="0,0,0,8" />
+                                        <ContentControl Content="{Binding ActionEditor}" />
+                                        <Button Style="{StaticResource SecondaryButtonStyle}" Content="Sil" HorizontalAlignment="Left" Margin="0,8,0,0"
+                                                Command="{Binding DataContext.DeleteCombinationCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding}" />
+                                    </StackPanel>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                    <Button Style="{StaticResource SecondaryButtonStyle}" Content="Yeni Kombinasyon Ekle" Command="{Binding AddCombinationCommand}" HorizontalAlignment="Left" />
+                </StackPanel>
+            </ScrollViewer>
+
+            <Border Grid.Column="1" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1,0,0,0" Padding="16,0,0,0">
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <StackPanel>
+                        <TextBlock Text="Seçili Tuş" Style="{StaticResource TextBodyStrong}" Margin="0,0,0,8" />
+                        <TextBlock Text="{Binding SelectedKey.Label, FallbackValue='(Tuş seçilmedi)'}" Style="{StaticResource TextBody}" Margin="0,0,0,12" />
+
+                        <StackPanel Visibility="{Binding IsKeySelected, Converter={StaticResource BooleanToVisibilityConverter}}">
+                            <TextBlock Text="FN tuşuna tekli eylem atanamaz." Style="{StaticResource TextCaptionMuted}" Margin="0,0,0,8"
+                                       Visibility="{Binding SelectedKey.IsFnKey, Converter={StaticResource BooleanToVisibilityConverter}}" />
+                            <StackPanel IsEnabled="{Binding SelectedKey.CanAssign}">
+                                <TextBlock Text="Normal eylem (tuş bırakılınca)" Style="{StaticResource TextBodyStrong}" Margin="0,0,0,6" />
+                                <ContentControl Content="{Binding SelectedKey.ActionEditor}" />
+                                <TextBlock Text="Uzun basma eylemi" Style="{StaticResource TextBodyStrong}" Margin="0,16,0,6" />
+                                <ContentControl Content="{Binding SelectedKey.LongPressEditor}" />
+                            </StackPanel>
+
+                            <Button Style="{StaticResource SecondaryButtonStyle}" Content="Atamayı Temizle" Command="{Binding ClearKeyCommand}" HorizontalAlignment="Left" Margin="0,16,0,0" />
+
+                            <TextBlock Text="Atamayı kopyala" Style="{StaticResource TextBodyStrong}" Margin="0,16,0,6" />
+                            <ComboBox Style="{StaticResource InputComboBoxStyle}" ItemsSource="{Binding Keys}" SelectedItem="{Binding CopyTarget}" DisplayMemberPath="Label" />
+                            <Button Style="{StaticResource SecondaryButtonStyle}" Content="Kopyala" Command="{Binding CopyKeyCommand}" HorizontalAlignment="Left" Margin="0,8,0,0" />
+                        </StackPanel>
+                    </StackPanel>
+                </ScrollViewer>
+            </Border>
+        </Grid>
+
+        <StackPanel Grid.Row="2" Orientation="Horizontal" Margin="0,16,0,0">
+            <Button Style="{StaticResource PrimaryButtonStyle}" Content="Kaydet" Command="{Binding SaveCommand}" Margin="0,0,8,0" />
+            <Button Style="{StaticResource SecondaryButtonStyle}" Content="İptal" Command="{Binding CancelCommand}" />
+            <TextBlock Text="{Binding StatusMessage}" Style="{StaticResource TextBodySmall}" VerticalAlignment="Center" Margin="12,0,0,0" />
+        </StackPanel>
+    </Grid>
+</UserControl>

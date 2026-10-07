@@ -19,6 +19,9 @@
         <DataTemplate DataType="{x:Type vm:ProfilesViewModel}">
             <views:ProfilesView />
         </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:KeysViewModel}">
+            <views:KeysView />
+        </DataTemplate>
         <DataTemplate DataType="{x:Type vm:PlaceholderPageViewModel}">
             <views:PlaceholderView />
         </DataTemplate>

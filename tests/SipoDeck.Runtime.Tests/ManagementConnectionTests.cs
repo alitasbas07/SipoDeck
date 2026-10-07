@@ -85,6 +85,47 @@ public sealed class ManagementConnectionTests : IDisposable
     }
 
     [Fact]
+    public async Task KeyInterception_RaisesEvent_AndSuppressesActions_UntilDisabled()
+    {
+        await using var server = FakeDeviceServer.Start();
+        var settings = WifiSettings(server.Port);
+        settings.Input.FnKey = 0;
+        settings.Input.ProfileSwitchMap[1] = "b";
+        Seed(settings);
+        var runtime = CreateRuntime();
+        var active = TrackActive(runtime);
+        var intercepted = new EventRecorder<SipoDeck.Runtime.Events.KeyInterceptedEventArgs>();
+        runtime.KeyIntercepted += (_, e) => intercepted.Add(e);
+
+        await runtime.StartAsync();
+        try
+        {
+            await server.WaitForConnectionAsync();
+
+            runtime.IsKeyInterceptionEnabled = true;
+            await PressAsync(server, 0, 1);
+
+            // Tuş olayları arayüze iletilir, motora (FN + 1 profil geçişi) ulaşmaz.
+            var first = await intercepted.NextAsync();
+            Assert.Equal(0, first.Key);
+            Assert.True(first.IsPressed);
+            Assert.Equal(4, intercepted.Count);
+            Assert.Equal("a", runtime.GetProfilesSnapshot().ActiveProfileId);
+            Assert.Equal(0, active.Count);
+
+            // Mod kapanınca motor yeniden çalışır.
+            runtime.IsKeyInterceptionEnabled = false;
+            await PressAsync(server, 0, 1);
+            Assert.Equal("b", await active.NextAsync());
+            Assert.Equal(4, intercepted.Count);
+        }
+        finally
+        {
+            await runtime.StopAsync();
+        }
+    }
+
+    [Fact]
     public async Task UpdateSettings_InputChange_ReplacesEngine_WithoutReconnect()
     {
         await using var server = FakeDeviceServer.Start();

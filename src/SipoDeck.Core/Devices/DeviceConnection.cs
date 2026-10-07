@@ -131,6 +131,9 @@ public sealed class DeviceConnection : IDisposable
 
         device.FirmwareVersion = info.FirmwareVersion;
         device.ProtocolVersion = info.ProtocolVersion;
+        device.KeyCount = info.KeyCount;
+        device.Rows = info.Rows;
+        device.Cols = info.Cols;
         device.ConnectionType = _connectionType;
         device.Transport = _transport;
 

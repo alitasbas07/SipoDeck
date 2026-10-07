@@ -42,13 +42,14 @@ public sealed class ProfilesViewModel : ObservableObject, IUnsavedChangesGuard, 
     private string? _infoMessage;
     private string? _savedMessage;
 
-    public ProfilesViewModel(AppRuntime runtime, Dispatcher dispatcher)
+    public ProfilesViewModel(AppRuntime runtime, Dispatcher dispatcher, Action<string> navigateToDeck)
     {
         _runtime = runtime;
         _dispatcher = dispatcher;
 
         SaveCommand = new AsyncRelayCommand(() => SaveAsync(), () => HasChanges && !IsBusy);
         CancelCommand = new RelayCommand(Discard, () => HasChanges && !IsBusy);
+        EditKeysCommand = new RelayCommand(() => navigateToDeck(_selected?.Id ?? string.Empty), () => _selected is not null && !IsBusy);
         CreateCommand = new AsyncRelayCommand(() => Guarded(CreateAsync), () => !IsBusy);
         DuplicateCommand = new AsyncRelayCommand(() => Guarded(DuplicateAsync), () => _selected is not null && !IsBusy);
         SetActiveCommand = new AsyncRelayCommand(() => Guarded(SetActiveAsync), () => CanSetActive);
@@ -71,6 +72,8 @@ public sealed class ProfilesViewModel : ObservableObject, IUnsavedChangesGuard, 
     public IAsyncRelayCommand SaveCommand { get; }
 
     public IRelayCommand CancelCommand { get; }
+
+    public IRelayCommand EditKeysCommand { get; }
 
     public IAsyncRelayCommand CreateCommand { get; }
 
@@ -587,6 +590,7 @@ public sealed class ProfilesViewModel : ObservableObject, IUnsavedChangesGuard, 
     private void RefreshState()
     {
         OnPropertyChanged(nameof(HasChanges));
+        ((IRelayCommand)EditKeysCommand).NotifyCanExecuteChanged();
         OnPropertyChanged(nameof(IsSelectedActive));
         OnPropertyChanged(nameof(CanSetActive));
         OnPropertyChanged(nameof(SetActiveHint));

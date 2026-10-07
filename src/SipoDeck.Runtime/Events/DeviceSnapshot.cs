@@ -8,13 +8,16 @@ namespace SipoDeck.Runtime.Events;
 /// </summary>
 public sealed class DeviceSnapshot
 {
-    public DeviceSnapshot(string id, string name, string firmwareVersion, int protocolVersion, ConnectionType connectionType)
+    public DeviceSnapshot(string id, string name, string firmwareVersion, int protocolVersion, ConnectionType connectionType, int keyCount, int? rows, int? cols)
     {
         Id = id;
         Name = name;
         FirmwareVersion = firmwareVersion;
         ProtocolVersion = protocolVersion;
         ConnectionType = connectionType;
+        KeyCount = keyCount;
+        Rows = rows;
+        Cols = cols;
     }
 
     public string Id { get; }
@@ -26,4 +29,8 @@ public sealed class DeviceSnapshot
     public int ProtocolVersion { get; }
 
     public ConnectionType ConnectionType { get; }
+
+    public int KeyCount { get; }
+    public int? Rows { get; }
+    public int? Cols { get; }
 }

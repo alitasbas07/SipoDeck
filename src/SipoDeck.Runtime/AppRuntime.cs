@@ -30,6 +30,13 @@ public sealed partial class AppRuntime
     private readonly DeviceManager _devices = new();
 
     private volatile RuntimeState _state = RuntimeState.Stopped;
+    private volatile bool _isKeyInterceptionEnabled;
+
+    public bool IsKeyInterceptionEnabled
+    {
+        get => _isKeyInterceptionEnabled;
+        set => _isKeyInterceptionEnabled = value;
+    }
     private volatile ConnectionState _deviceConnectionState = ConnectionState.Disconnected;
     private ConnectionType _connectionType;
 
@@ -64,6 +71,14 @@ public sealed partial class AppRuntime
     public event EventHandler<DeviceConnectionStateChangedEventArgs>? DeviceConnectionStateChanged;
 
     public event EventHandler<DeviceSnapshot>? DeviceIdentified;
+    public event EventHandler<KeyInterceptedEventArgs>? KeyIntercepted;
+
+    public DeviceSnapshot? GetDeviceSnapshot()
+    {
+        var dev = _devices.Devices.FirstOrDefault();
+        if (dev is null) return null;
+        return new DeviceSnapshot(dev.Id, dev.Name, dev.FirmwareVersion, dev.ProtocolVersion, dev.ConnectionType, dev.KeyCount, dev.Rows, dev.Cols);
+    }
 
     public event EventHandler<string>? MessageRejected;
 
@@ -185,10 +200,17 @@ public sealed partial class AppRuntime
     }
 
     private void OnDeviceEventReceived(object? sender, IDeviceEvent deviceEvent)
-        => Volatile.Read(ref _inputEngine)?.Process(deviceEvent);
+    {
+        if (_isKeyInterceptionEnabled && deviceEvent is SipoDeck.Core.Devices.KeyEvent keyEvent)
+        {
+            KeyIntercepted?.Invoke(this, new KeyInterceptedEventArgs(keyEvent.Button, keyEvent.State == SipoDeck.Core.Protocol.ButtonState.Pressed));
+            return;
+        }
+        Volatile.Read(ref _inputEngine)?.Process(deviceEvent);
+    }
 
     private void OnDeviceIdentified(object? sender, Device device)
-        => DeviceIdentified?.Invoke(this, new DeviceSnapshot(device.Id, device.Name, device.FirmwareVersion, device.ProtocolVersion, device.ConnectionType));
+        => DeviceIdentified?.Invoke(this, new DeviceSnapshot(device.Id, device.Name, device.FirmwareVersion, device.ProtocolVersion, device.ConnectionType, device.KeyCount, device.Rows, device.Cols));
 
     private void OnMessageRejected(object? sender, string reason) => MessageRejected?.Invoke(this, reason);
 

@@ -18,11 +18,23 @@ public sealed class HelloMessage : DeviceMessage
     [JsonPropertyName("protocol_version")]
     public int ProtocolVersion { get; set; }
 
+    [JsonPropertyName("key_count")]
+    public int KeyCount { get; set; }
+
+    [JsonPropertyName("rows")]
+    public int? Rows { get; set; }
+
+    [JsonPropertyName("cols")]
+    public int? Cols { get; set; }
+
     public DeviceInfo ToDeviceInfo() => new()
     {
         DeviceId = DeviceId,
         DeviceName = DeviceName,
         FirmwareVersion = FirmwareVersion,
-        ProtocolVersion = ProtocolVersion
+        ProtocolVersion = ProtocolVersion,
+        KeyCount = KeyCount,
+        Rows = Rows,
+        Cols = Cols
     };
 }

@@ -26,6 +26,10 @@ public sealed class Device : IDevice
 
     public int ProtocolVersion { get; set; }
 
+    public int KeyCount { get; set; }
+    public int? Rows { get; set; }
+    public int? Cols { get; set; }
+
     public ConnectionType ConnectionType { get; set; }
 
     /// <summary>Cihazın haberleştiği transport. Bağlanana kadar null olabilir.</summary>
